@@ -16,9 +16,9 @@ const { verificarToken } = require("../middlewares/verificarToken");
 const router = Router()
 
 router.get("/", verificarToken, getCaseList)
+router.get("/checknumero/:numero", verificarToken, getCaseByNumero)
 router.get("/search", verificarToken, getSearchCasesByStatus) 
 router.get("/totalbystatus", verificarToken, getCaseAndStatus)
-router.get("/checknumero/:numero", verificarToken, getCaseByNumero)
 router.post("/uploadfile", verificarToken, postUploadFile)
 router.get("/:id", verificarToken, getCase)
 router.post("/", verificarToken, [

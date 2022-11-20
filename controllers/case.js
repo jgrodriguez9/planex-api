@@ -297,7 +297,9 @@ const postUploadFile = async (req, res) => {
 }
 
 const getCaseByNumero = async (req, res) => {
+    console.log('-------------entro----------') 
     const { numero } = req.params;
+    console.log(numero)
 
     try {
 
