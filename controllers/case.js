@@ -102,6 +102,8 @@ const postCase = async (req, res) =>{
         const caseObj = {
             aNumber: body.aNumber,
             name: body.name,
+            lastName: body.lastName,
+            aka: body.aka,
             birthday: body.birthday,
             placeBirth: body.placeBirth,
             gender: body.gender
