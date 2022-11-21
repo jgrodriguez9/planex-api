@@ -1,29 +1,42 @@
-const PDFParser = require("pdf2json");
+const PDFParser  = require("pdf2json/pdfparser");
 const R = require("ramda");
 const { camelCase } = require("lodash");
-const PDFJSClass = require("pdf2json/lib/pdf");
-const PDFFont = require("pdf2json/lib/pdffont");
 
 let FILTERED_VALUES = [];
 const TEXT_SEPARATOR = ":";
+const DISTANCE_DELTA = 0.1;
 
 const getHLines = R.compose(R.map(R.prop("y")), R.flatten, R.prop("HLines"));
 
 const getTexts = R.compose(R.slice(1, Infinity), R.prop("Texts"));
 
-const getHLinesByTexts = R.compose(
-  R.map(R.prop("y")),
-  R.filter((item) => {
-    !FILTERED_VALUES.includes(
-      R.evolve(
-        { T: R.compose(R.trim, decodeURIComponent) },
-        R.path(["R", 0], item)
-      ).T
-    );
-  }),
-  R.flatten,
-  R.prop("Texts")
-);
+const areAdjacentBlocks = (t1, t2) => {
+  if (t1.y < t2.y - DISTANCE_DELTA) {
+    if (Math.abs(t1.x - t2.x) <= DISTANCE_DELTA) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const isDistanceBetweenEmptyBlock = (t1, t2) => {
+  return t2.x - t1.x > 7.75;
+};
+
+const getHLinesY = (items) => {
+  let arr = [];
+  items.forEach((element) => {
+    const text = decodeURIComponent(R.trim(R.path(["R", 0], element).T)).split(
+      TEXT_SEPARATOR
+    )[0];
+    if (FILTERED_VALUES.includes(text)) {
+      arr.push(element.y);
+    }
+  });
+  return arr;
+};
+
+const getHLinesByTexts = R.compose(getHLinesY, R.flatten, R.prop("Texts"));
 
 const getRawTexts = R.compose(
   R.map(
@@ -47,11 +60,11 @@ const parsePages = (pages, options = {}) => {
     hasName("partition") ? getHLinesByTexts : getHLines,
     pages
   );*/
-
   const hlinesPaged = [
     [3.5970000000000004, 13.574, 20.359, 23.981, 30.939, 35.309, 39.621],
-    [5.38, 8.888, 11.043 - 1, 14.839],
+    [5.38, 8.888, 10.043, 14.839],
   ];
+
   const textsPaged = R.map(getTexts, pages);
   let groups = [];
 
@@ -78,7 +91,6 @@ const parsePages = (pages, options = {}) => {
 
   // Unnest pages and collect groups into a single array of groups,
   // then get the texts within each group
-  //groups = R.compose(R.map(getRawTexts), R.unnest, R.map(R.valuesIn))(groups);
   return groups;
 };
 
@@ -168,7 +180,7 @@ const getSponsorShip = (rawTexts) => {
       let [head, ...texts] = el;
       data.label = decodeURIComponent(head.R[0].T);
       const rePSponsor = RegExp(".Counter");
-      const reValueRadio = RegExp("^[No|Partial]$");
+      const reValueRadio = RegExp("No|Partial");
       let isAllSponsorGroup = Boolean(false);
       if (camelCase(data.label) === "allSponsorships") {
         data = Object.assign(data, {
@@ -197,10 +209,9 @@ const getSponsorShip = (rawTexts) => {
         data = Object.assign(data, { heads: [], rows: {} });
         isAllSponsorGroup = false;
       }
-      let pos,
-        countCol = 0;
-      let isPSponsor = Boolean(false),
-        isFirstT = Boolean(true);
+
+      let countCol = -1;
+      let isPSponsor = Boolean(false);
       let prevText = null;
       let titles = [];
       for (let i = 0; i < texts.length; i++) {
@@ -223,68 +234,30 @@ const getSponsorShip = (rawTexts) => {
             data.heads.push(title);
             data.rows[camelCase(title)] = [];
           }
-          pos = i;
         } else {
-          /*if (prevText) {
-            if (!PDFFont.areAdjacentBlocks(prevText, element)) {
-              titles[countCol-1].push(title);
+          if (prevText) {
+            if (
+              !areAdjacentBlocks(prevText, element) ||
+              reValueRadio.test(title)
+            ) {
+              titles[countCol].push(title);
             } else {
-              prevText = element;
+              if (isDistanceBetweenEmptyBlock(prevText, element)) {
+                titles.push(["N/A"]);
+                countCol += 1;
+              }
               titles.push([title]);
+              prevText = element;
               countCol += 1;
             }
           } else {
             prevText = element;
             titles.push([title]);
             countCol += 1;
-          }*/
-
-          /*if (i < texts.length - 1) {
-            console.log(PDFFont.areAdjacentBlocks(texts[i], texts[i + 1]));
-            lastX = texts[i + 1].x;
-            if (
-              lastX === texts[i].x ||
-              reValueRadio.test(texts[i + 1].R[0].T)
-            ) {
-              rowTitle +=
-                pos + 1 == i
-                  ? title + " " + texts[i + 1].R[0].T
-                  : " " + texts[i + 1].R[0].T;
-              mergedT = true;
-            } else {
-              countT += 1;
-              mergedT = title === "Yes" && reValueRadio.test(texts[i + 1].R[0].T) ? true : false;
-            }
-          } else {
-            if (lastX === texts[i].x) {
-              rowTitle += texts[i].R[0].T;
-            }
-            mergedT = false;
           }
-
-          if (!mergedT) {
-            if (countT - 1 === pos) {
-              countRow += 1;
-              countT = 0;
-            }
-            let posRow = i - (countT + pos + 1) * countRow;
-            if (!isAllSponsorGroup) {
-              console.log(rowTitle || title);
-              data.rows[camelCase(data.heads[countT - 1])].push(rowTitle);
-            } else {
-              pos -= 1;
-              !isPSponsor
-                ? data.ACounter.rows[posRow - 1][
-                    data.ACounter.heads[posRow - 1]
-                  ].push(rowTitle)
-                : data.PCounter.rows[posRow - 1][
-                    data.PCounter.heads[posRow - 1]
-                  ].push(rowTitle);
-            }
-            rowTitle = "";
-          }*/
         }
       }
+
       if (isAllSponsorGroup) {
         const posHead = data.ACounter.heads.length - 2;
         data.ACounter.heads[posHead] = `${
@@ -297,6 +270,47 @@ const getSponsorShip = (rawTexts) => {
           1,
           data.ACounter.heads
         ); // equal heads for one call function in this case, separate function ...
+
+        data.PCounter.rows = data.ACounter.rows;
+      }
+
+      let iter = 0;
+      let firstRow = Boolean(true);
+      let textOver = false;
+      for (const iterator of titles) {
+        if (isAllSponsorGroup) {
+          if (data.ACounter.heads.length - 1 == iter) {
+            iter = 0;
+            firstRow = false;
+          }
+          if (firstRow && data.ACounter.heads.length - 1 > iter) {
+            data.ACounter.rows[camelCase(data.ACounter.heads[iter])].push(
+              iterator.length < 1 ? iterator[0] : iterator.join(" ")
+            );
+          } else {
+            data.PCounter.rows[camelCase(data.ACounter.heads[iter])].push(
+              iterator.length < 1 ? iterator[0] : iterator.join(" ")
+            );
+          }
+        } else {
+          if (data.heads.length == iter) {
+            iter = 0;
+            firstRow = false;
+          }
+          if (firstRow && data.heads.length > iter) {
+            data.rows[camelCase(data.heads[iter])].push([
+              iterator.length < 1 ? iterator[0] : iterator.join(" "),
+            ]);
+          } else {
+            if (data.heads.length - 1 == iter) {
+              textOver = true;
+            }
+            data.rows[camelCase(data.heads[iter])][0].push(
+              iterator.length < 1 ? iterator[0] : iterator.join(" ")
+            );
+          }
+        }
+        if (!textOver) iter++;
       }
     }
     sponsorship.push(data);
@@ -318,13 +332,27 @@ const getSummary = (rawTexts) => {
   return summary;
 };
 
-const parse = (pdfBuffer) =>
+exports.parse = (pdfBuffer) =>
   new Promise((resolve, reject) => {
     const pdfParser = new PDFParser();
     pdfParser.on("pdfParser_dataReady", (pdfData) => {
       try {
         var data = getSections(
-          parsePages(pdfData.Pages, { partition: ["UAC Basic Information"] })
+          parsePages(pdfData.Pages, {
+            partition: [
+              "UAC Basic Information",
+              "Demographic Information",
+              "Relationship to UC",
+              "Contact Information",
+              "Flags",
+              "Additional Information",
+              "All Sponsorships",
+              "Addresses",
+              "Other Sponsors Using Address",
+              "Household Information",
+              "Affidavits of Support:",
+            ],
+          })
         );
         resolve(data);
       } catch (err) {
@@ -336,6 +364,3 @@ const parse = (pdfBuffer) =>
     });
     pdfParser.parseBuffer(pdfBuffer);
   });
-
-
-module.exports = parse;
