@@ -9,6 +9,12 @@ const Case = db.define("Case", {
     name: {
         type: DataTypes.STRING
     },
+    lastName: {
+        type: DataTypes.STRING
+    },
+    aka: {
+        type: DataTypes.STRING
+    },
     birthday: {
         type: DataTypes.DATEONLY
     },
@@ -66,6 +72,9 @@ const SponsorInfo = db.define("SponsorInfo", {
     name: {
         type: DataTypes.STRING
     },
+    lastName: {
+        type: DataTypes.STRING
+    }
 })
 
 const HouseHoldMembers = db.define("HouseHoldMembers", {

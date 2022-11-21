@@ -125,19 +125,20 @@ const getCase = async (req, res) => {
   }
 };
 
-const postCase = async (req, res) => {
-  const { body } = req;
-  console.log(body);
-  try {
-    const caseObj = {
-      aNumber: body.aNumber,
-      name: body.name,
-      birthday: body.birthday,
-      placeBirth: body.placeBirth,
-      gender: body.gender,
-    };
-    const newCase = await Case.create(caseObj);
-    const caseId = newCase.getDataValue("id");
+const postCase = async (req, res) =>{
+    const { body } = req
+    try {
+        const caseObj = {
+            aNumber: body.aNumber,
+            name: body.name,
+            lastName: body.lastName,
+            aka: body.aka,
+            birthday: body.birthday,
+            placeBirth: body.placeBirth,
+            gender: body.gender
+        }
+        const newCase = await Case.create(caseObj);
+        const caseId = newCase.getDataValue('id');
 
     const { caseInfo } = body;
     caseInfo.case_id = caseId;
@@ -451,7 +452,9 @@ const postUploadFile = async (req, res) => {
 };
 
 const getCaseByNumero = async (req, res) => {
-  const { numero } = req.params;
+    console.log('-------------entro----------') 
+    const { numero } = req.params;
+    console.log(numero)
 
   try {
     //checamos si existe el usuario
