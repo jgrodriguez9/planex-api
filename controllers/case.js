@@ -1,4 +1,5 @@
 const { Op } = require("sequelize");
+const moment = require("moment");
 const multer = require("multer");
 const { ERROR500 } = require("../constant/errors");
 const {
@@ -16,13 +17,16 @@ const { parse } = require("../helpers/pdfToJson");
 
 const upload = multer({
   fileFilter: (req, file, cb) => {
-    if (file.mimetype == "pdf") {
+    if (file.mimetype == "application/pdf") {
       cb(null, true);
     } else {
       cb(null, false);
       return cb(new Error("INVALID_TYPE"));
     }
   },
+  limits: {
+	  fileSize: 1024 * 1024,
+  }
 }).single("file");
 
 const getCaseList = async (req, res) => {
@@ -121,18 +125,20 @@ const getCase = async (req, res) => {
   }
 };
 
-const postCase = async (req, res) => {
-  const { body } = req;
-  try {
-    const caseObj = {
-      aNumber: body.aNumber,
-      name: body.name,
-      birthday: body.birthday,
-      placeBirth: body.placeBirth,
-      gender: body.gender,
-    };
-    const newCase = await Case.create(caseObj);
-    const caseId = newCase.getDataValue("id");
+const postCase = async (req, res) =>{
+    const { body } = req
+    try {
+        const caseObj = {
+            aNumber: body.aNumber,
+            name: body.name,
+            lastName: body.lastName,
+            aka: body.aka,
+            birthday: body.birthday,
+            placeBirth: body.placeBirth,
+            gender: body.gender
+        }
+        const newCase = await Case.create(caseObj);
+        const caseId = newCase.getDataValue('id');
 
     const { caseInfo } = body;
     caseInfo.case_id = caseId;
@@ -340,8 +346,7 @@ const postUploadFile = async (req, res) => {
       if (err.message === "FILE_MISSING" || err.message === "INVALID_TYPE")
         return res.status(400).json({
           success: false,
-          code: "FILE_MISSING",
-          msg: "FILE_MISSING",
+          code: err.message,
           errors: err,
         });
       else {
@@ -353,47 +358,103 @@ const postUploadFile = async (req, res) => {
         });
       }
     }
-
-    if (!req.file || Object.keys(req.file).length === 0) {
-      res.status(400).send("No files were uploaded.");
-      return;
-    }
-    const result = { done: {}, draft: {} };
-    await parse(req.file.buffer).then((data) => {
-      const fields = data.summary.fields;
-      result.done = {
-        name: fields[0].value ? fields[0].value + " " + fields[1].value : "",
-        aka: fields[2].value ?? "",
-        aNumber: fields[6].value ?? null,
-        birthday: fields[6].value ?? null,
-        placeBirth: fields[10].value ?? "",
-        gender: fields[5].value ?? "M",
-        sponsorInfo: {
-          name: "",
-          age: "",
-          relationship: "",
-          nationality: "",
-          contactNumbers: [],
-          homeAddress: "",
-          gender: "Male",
+	try{
+		const result = { done: {}, draft: {} };
+		await parse(req.file.buffer).then((data) => {
+		  const fields = data.summary.fields;
+		  result.done = {
+			name: fields[0].value ? fields[0].value + " " + fields[1].value : "",
+			aka: fields[2].value ?? "",
+			aNumber: fields[6].value ?? null,
+			birthday: moment(fields[4].value, "MM/DD/YYYY").format("YYYY-MM-DD") ?? null,
+			placeBirth: fields[10].value ?? "",
+			gender: fields[5].value ?? "M",
+			sponsorInfo: {
+				name: '',
+				age: '',
+				relationship: '',
+				nationality: '',
+				contactNumbers: [],
+				homeAddress: '',
+				gender: 'Male'
+            },
+            caseInfo: {
+            dateAcceptance: null,
+            dateRelease: null,
+            dateComplete: null,
+            dateClosure: null,
+            postReleaseAgency: '',
+            caseManager: '',
+            contactInformation: '',
+            status: 'active'
         },
-      };
-      data.summary.fields.forEach((el) => {
-        console.log(el);
-      });
-    });
-    console.log(result);
+        houseHoldMembers: [
+            {
+                name: '',
+                nacionality: '',
+                age: '',
+                gender: 'Male',
+                relationshipSponsor: '',
+                relationshipMinor: '',
+            }
+        ],
+        reasonReferral: {
+            prsOnly: {
+                criminalHistory: false,
+                gangInvolvement: false,
+                behavioralProblems: false,
+                abuseHistory: false,
+                traumaHistory: false,
+                mentalHealth: false,
+                suicidalBehaviors: false,
+                substanceAbuse: false,
+                cognitiveDevelopmentalDelays: false,
+                lackFormalEducation: false,
+                medicalCondition: false,
+                disability: false,
+                pregnantParentingTeen: false,
+                lackPriorRelationshipSponsor: false,
+                sponsorLackKnowledge: false,
+                traffickingConcern: false,
+                sponsorConcerns: false,
+                prsDiscretionary: false,
+                categorySponsorship: false,
+                other: false,
+            },
+            prsAfter: {
+                tvpraTraffickingConcerns: false,
+                tvpraSponsorConcerns: false,
+                tvpraDisability: false,
+                tvpraAbuseHistory: false,
+            }		
+		   }
+		  };
+		  data.summary.fields.forEach((el) => {
+			console.log(el);
+		  });
+		});
+		console.log(result);
 
-    return res.status(200).json({
-      success: true,
-      msg: "success!",
-      content: result,
-    });
+		return res.status(200).json({
+		  success: true,
+		  msg: "success!",
+		  content: result,
+		});
+	}catch(err){
+	  return res.status(500).json({
+        success: false,
+        msg: ERROR500,
+		code: "GENERIC_ERROR",
+        errors: err,
+      });
+	}
   });
 };
 
 const getCaseByNumero = async (req, res) => {
-  const { numero } = req.params;
+    console.log('-------------entro----------') 
+    const { numero } = req.params;
+    console.log(numero)
 
   try {
     //checamos si existe el usuario

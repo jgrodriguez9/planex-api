@@ -3,28 +3,28 @@ const { DataTypes } = require("sequelize");
 const db = require("../db/connections");
 
 const Case = db.define("Case", {
-  aNumber: {
-    type: DataTypes.STRING,
-  },
-  name: {
-    type: DataTypes.STRING,
-  },
-  lastName: {
-    type: DataTypes.STRING,
-  },
-  aka: {
-    type: DataTypes.STRING,
-  },
-  birthday: {
-    type: DataTypes.DATEONLY,
-  },
-  placeBirth: {
-    type: DataTypes.STRING,
-  },
-  gender: {
-    type: DataTypes.STRING,
-  },
-});
+    aNumber: {
+        type: DataTypes.STRING
+    },
+    name: {
+        type: DataTypes.STRING
+    },
+    lastName: {
+        type: DataTypes.STRING
+    },
+    aka: {
+        type: DataTypes.STRING
+    },
+    birthday: {
+        type: DataTypes.DATEONLY
+    },
+    placeBirth: {
+        type: DataTypes.STRING
+    },
+    gender: {
+        type: DataTypes.STRING
+    } 
+})
 
 const CaseInfo = db.define("CaseInfo", {
   caseManager: {
@@ -54,28 +54,28 @@ const CaseInfo = db.define("CaseInfo", {
 });
 
 const SponsorInfo = db.define("SponsorInfo", {
-  age: {
-    type: DataTypes.STRING,
-  },
-  homeAddress: {
-    type: DataTypes.STRING,
-  },
-  nationality: {
-    type: DataTypes.STRING,
-  },
-  relationship: {
-    type: DataTypes.STRING,
-  },
-  gender: {
-    type: DataTypes.STRING,
-  },
-  name: {
-    type: DataTypes.STRING,
-  },
-  lastName: {
-    type: DataTypes.STRING,
-  },
-});
+    age: {
+        type: DataTypes.STRING
+    },   
+    homeAddress: {
+        type: DataTypes.STRING
+    },
+    nationality: {
+        type: DataTypes.STRING
+    },
+    relationship: {
+        type: DataTypes.STRING
+    },
+    gender: {
+        type: DataTypes.STRING
+    },
+    name: {
+        type: DataTypes.STRING
+    },
+    lastName: {
+        type: DataTypes.STRING
+    }
+})
 
 const HouseHoldMembers = db.define("HouseHoldMembers", {
   age: {
