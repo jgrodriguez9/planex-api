@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
+    "serve": "nodemon --exec babel-node index.js",
+    "build": "babel index.js -d dist",
+    "db": "nodemon ./migrations/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,7 +15,6 @@
   "dependencies": {
     "cors": "^2.8.5",
     "crypto-js": "^4.1.1",
-    "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-validator": "^6.14.2",
     "jsonwebtoken": "^8.5.1",
@@ -23,5 +24,12 @@
     "pdf2json": "^2.0.1",
     "ramda": "^0.28.0",
     "sequelize": "^6.25.5"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.19.3",
+    "@babel/core": "^7.20.2",
+    "@babel/node": "^7.20.2",
+    "@babel/preset-env": "^7.20.2",
+    "dotenv": "^16.0.3"
   }
 }
