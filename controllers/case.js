@@ -361,80 +361,131 @@ const postUploadFile = async (req, res) => {
 	try{
 		const result = { done: {}, draft: {} };
 		await parse(req.file.buffer).then((data) => {
-		  const fields = data.summary.fields;
-		  result.done = {
-			name: fields[0].value ? fields[0].value + " " + fields[1].value : "",
-			aka: fields[2].value ?? "",
-			aNumber: fields[6].value ?? null,
-			birthday: moment(fields[4].value, "MM/DD/YYYY").format("YYYY-MM-DD") ?? null,
-			placeBirth: fields[10].value ?? "",
-			gender: fields[5].value ?? "M",
-			sponsorInfo: {
-				name: '',
-				age: '',
-				relationship: '',
-				nationality: '',
-				contactNumbers: [],
-				homeAddress: '',
-				gender: 'Male'
-            },
-            caseInfo: {
-            dateAcceptance: null,
-            dateRelease: null,
-            dateComplete: null,
-            dateClosure: null,
-            postReleaseAgency: '',
-            caseManager: '',
-            contactInformation: '',
-            status: 'active'
-        },
-        houseHoldMembers: [
-            {
-                name: '',
-                nacionality: '',
-                age: '',
-                gender: 'Male',
-                relationshipSponsor: '',
-                relationshipMinor: '',
-            }
-        ],
-        reasonReferral: {
-            prsOnly: {
-                criminalHistory: false,
-                gangInvolvement: false,
-                behavioralProblems: false,
-                abuseHistory: false,
-                traumaHistory: false,
-                mentalHealth: false,
-                suicidalBehaviors: false,
-                substanceAbuse: false,
-                cognitiveDevelopmentalDelays: false,
-                lackFormalEducation: false,
-                medicalCondition: false,
-                disability: false,
-                pregnantParentingTeen: false,
-                lackPriorRelationshipSponsor: false,
-                sponsorLackKnowledge: false,
-                traffickingConcern: false,
-                sponsorConcerns: false,
-                prsDiscretionary: false,
-                categorySponsorship: false,
-                other: false,
-            },
-            prsAfter: {
-                tvpraTraffickingConcerns: false,
-                tvpraSponsorConcerns: false,
-                tvpraDisability: false,
-                tvpraAbuseHistory: false,
-            }		
-		   }
-		  };
-		  data.summary.fields.forEach((el) => {
-			console.log(el);
-		  });
-		});
-		console.log(result);
+            //console.log(data)
+            
+            const fields = data.summary.fields;
 
+            const sponsorInfoPrimary = data?.profile?.find(item => {
+                return item.label.includes('Demographic Information')
+            })
+            //console.log(JSON.stringify(sponsorInfoPrimary))
+            const sponsorRelationship = data?.profile?.find(item => {
+                return item.label.includes('Relationship to UC')
+            })
+            const sponsorContacts = data?.profile?.find(item => {
+                return item.label.includes('Contact Information')
+            })
+            let homeAddress = ''
+            let contactNumbers = []
+
+            if(sponsorInfoPrimary && sponsorInfoPrimary !== undefined){
+                const dateBirthSponsor = sponsorInfoPrimary?.fields[2]?.value ?? ''
+                if(dateBirthSponsor){
+                    const _mBirthay = moment(dateBirthSponsor, "MM/DD/YYYY")
+                    age = moment().diff(_mBirthay, 'years')
+                }    
+                
+            }
+            if(sponsorContacts && sponsorContacts !== undefined){
+                const phone1 = sponsorContacts?.fields.find(item=>item.name.replaceAll(" ", "")==='PrimaryPhone:')
+                if(phone1?.value) contactNumbers.push({number: phone1.value})
+                const phone2 = sponsorContacts?.fields.find(item=>item.name.replaceAll(" ", "")==='BackupPhone#:')
+                if(phone2?.value) contactNumbers.push({number: phone2.value})
+
+                const streetA = sponsorContacts?.fields[0]?.value ?? ''
+                const cityA = sponsorContacts?.fields[1]?.value ?? ''
+                const stateA = sponsorContacts?.fields[2]?.value ?? ''
+                const countryA = sponsorContacts?.fields[4]?.value ?? ''
+                const zipCodeA = sponsorContacts?.fields[3]?.value ?? ''
+                homeAddress = `${streetA} ${cityA} ${stateA} ${countryA} ${zipCodeA}`
+            }
+
+            //house hold members
+            let houseHoldMembers = []
+            const houseHoldM = data?.profile?.find(item => {
+                return item.label.includes('Household Information:')
+            })
+
+            if(houseHoldM && houseHoldM !== undefined){
+                if(houseHoldM?.rows?.firstName[0].length > 0){
+                    houseHoldMembers = houseHoldM?.rows?.firstName[0].map((item, index) => (
+                        {
+                            name: `${item} ${houseHoldM?.rows?.lastName[0][index]}`,
+                            nacionality: '',
+                            age: houseHoldM?.rows?.currentAge[0][index],
+                            gender: houseHoldM?.rows?.gender[0][index],
+                            relationshipSponsor: houseHoldM?.rows?.relationshipToSponsor[0][index],
+                            relationshipMinor: '',                            
+                        }
+                    ))
+                    console.log(houseHoldMembers)
+                }
+                
+            }
+
+
+            result.done = {
+                name: fields[0]?.value ?? '' ,
+                lastName: fields[1]?.value ?? "",
+                aka: fields[2]?.value ?? "",
+                aNumber: fields[6]?.value ?? null,
+                birthday: moment(fields[4]?.value, "MM/DD/YYYY").format("YYYY-MM-DD") ?? null,
+                placeBirth: fields[10]?.value ?? "",
+                gender: (fields[5]?.value ==  "M" || fields[5]?.value ==  "Male") ? 'Male' : "Female",
+                sponsorInfo: {
+                    name: sponsorInfoPrimary?.fields[0]?.value ?? '',
+                    lastName: sponsorInfoPrimary?.fields[1]?.value ?? '',
+                    age: age,
+                    relationship: sponsorRelationship?.fields[0]?.value ?? '',
+                    nationality: sponsorInfoPrimary?.fields[7]?.value ?? '',
+                    contactNumbers: contactNumbers,
+                    homeAddress: homeAddress,
+                    gender: (sponsorInfoPrimary?.fields[6]?.value ==  "M" || sponsorInfoPrimary?.fields[6]?.value ==  "Male") 
+                            ? 'Male' : "Female",
+                },
+                caseInfo: {
+                    dateAcceptance: null,
+                    dateRelease: null,
+                    dateComplete: null,
+                    dateClosure: null,
+                    postReleaseAgency: '',
+                    caseManager: '',
+                    contactInformation: '',
+                    status: 'active'
+                },
+                houseHoldMembers: [...houseHoldMembers],
+                reasonReferral: {
+                    prsOnly: {
+                        criminalHistory: false,
+                        gangInvolvement: false,
+                        behavioralProblems: false,
+                        abuseHistory: false,
+                        traumaHistory: false,
+                        mentalHealth: false,
+                        suicidalBehaviors: false,
+                        substanceAbuse: false,
+                        cognitiveDevelopmentalDelays: false,
+                        lackFormalEducation: false,
+                        medicalCondition: false,
+                        disability: false,
+                        pregnantParentingTeen: false,
+                        lackPriorRelationshipSponsor: false,
+                        sponsorLackKnowledge: false,
+                        traffickingConcern: false,
+                        sponsorConcerns: false,
+                        prsDiscretionary: false,
+                        categorySponsorship: false,
+                        other: false,
+                    },
+                    prsAfter: {
+                        tvpraTraffickingConcerns: false,
+                        tvpraSponsorConcerns: false,
+                        tvpraDisability: false,
+                        tvpraAbuseHistory: false,
+                    }		
+                }
+            };		  
+		});
 		return res.status(200).json({
 		  success: true,
 		  msg: "success!",
@@ -452,9 +503,7 @@ const postUploadFile = async (req, res) => {
 };
 
 const getCaseByNumero = async (req, res) => {
-    console.log('-------------entro----------') 
     const { numero } = req.params;
-    console.log(numero)
 
   try {
     //checamos si existe el usuario

@@ -13,8 +13,8 @@ const houseHoldMember = require('../routes/houseHolderMembers');
 const stagesRoute = require('../routes/stages');
 const stagesNotes = require('../routes/stagesNotes');
 const caseStages = require('../routes/caseStages');
-const safetyStatusAttribute = require('../routes/safetyStatus');
-const safetyStatus = require('../routes/caseSafetyStatus');
+//const safetyStatusAttribute = require('../routes/safetyStatus');
+//const safetyStatus = require('../routes/caseSafetyStatus');
 
 class Server{
 
@@ -32,8 +32,8 @@ class Server{
             stages: '/api/stages',
             stagesnotes: '/api/stagesnotes',
             casestages: '/api/casestages',
-            safetyStatusAttribute: '/api/safety/attributes',
-            safetyStatus: '/api/safetystatus',
+            //safetyStatusAttribute: '/api/safety/attributes',
+            //safetyStatus: '/api/safetystatus',
         }
 
         //db
@@ -93,8 +93,8 @@ class Server{
         this.app.use(this.apiPath.stages, stagesRoute);
         this.app.use(this.apiPath.stagesnotes, stagesNotes);
         this.app.use(this.apiPath.casestages, caseStages);
-        this.app.use(this.apiPath.safetyStatusAttribute, safetyStatusAttribute);
-        this.app.use(this.apiPath.safetyStatus, safetyStatus);
+        //this.app.use(this.apiPath.safetyStatusAttribute, safetyStatusAttribute);
+        //this.app.use(this.apiPath.safetyStatus, safetyStatus);
     }
 
     listen(){
