@@ -286,6 +286,33 @@ const Relationship = db.define('Relationship', {
     },
 })
 
+const ReportTopConfiguration = db.define('ReportTopConfiguration', {
+    title: {
+        type: DataTypes.STRING
+    },
+    type: {
+        type: DataTypes.ENUM('prs_case_type', 'prs_visit_type', 'prs_level', 'case_closing_summary'),
+    },
+    show: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+})
+
+const CaseReportTopConfiguration = db.define("CaseReportTopConfiguration", {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+      allowNull: false,
+    },
+    checked: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+  });
+
+
 Case.hasOne(CaseInfo, { foreignKey: { name: "case_id", allowNull: false } });
 CaseInfo.belongsTo(Case, { foreignKey: "case_id" });
 
@@ -296,23 +323,6 @@ Case.hasMany(HouseHoldMembers, {
   foreignKey: { name: "case_id", allowNull: false },
 });
 HouseHoldMembers.belongsTo(Case, { foreignKey: "case_id" });
-
-const ReportTopConfiguration = ('ReportTopConfiguration', {
-    title: {
-        type: DataTypes.STRING
-    },
-    type: {
-        type: DataTypes.ENUM('prs_case_type', 'prs_visit_type', 'prs_level', 'case_closing_summary'),
-    },
-    checked: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
-    },
-    show: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true
-    },
-})
 
 SponsorInfo.hasMany(ContactNumbers, {
   foreignKey: { name: "sponsor_id", allowNull: false },
@@ -342,6 +352,9 @@ HouseHoldMembers.belongsTo(Relationship, {foreignKey: 'relationship_id'})
 ReportTopConfiguration.hasMany(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
 ReportTopConfiguration.belongsTo(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
 
+Case.belongsToMany(ReportTopConfiguration, { through: CaseReportTopConfiguration, foreignKey: 'report_id' });
+ReportTopConfiguration.belongsToMany(Case, { through: CaseReportTopConfiguration, foreignKey: 'case_id' });
+
 
 module.exports = {
   Case,
@@ -356,5 +369,6 @@ module.exports = {
   PRSOnly,
   SafetyStatusAttribute,
   SafetyStatus,
-  Relationship
+  Relationship,
+  ReportTopConfiguration
 };
