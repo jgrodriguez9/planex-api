@@ -15,6 +15,7 @@ const stagesNotes = require('../routes/stagesNotes');
 const caseStages = require('../routes/caseStages');
 //const safetyStatusAttribute = require('../routes/safetyStatus');
 //const safetyStatus = require('../routes/caseSafetyStatus');
+const relationshipRoute = require('../routes/relationship');
 
 class Server{
 
@@ -34,6 +35,7 @@ class Server{
             casestages: '/api/casestages',
             //safetyStatusAttribute: '/api/safety/attributes',
             //safetyStatus: '/api/safetystatus',
+            relationship: '/api/relationship'
         }
 
         //db
@@ -95,6 +97,7 @@ class Server{
         this.app.use(this.apiPath.casestages, caseStages);
         //this.app.use(this.apiPath.safetyStatusAttribute, safetyStatusAttribute);
         //this.app.use(this.apiPath.safetyStatus, safetyStatus);
+        this.app.use(this.apiPath.relationship, relationshipRoute)
     }
 
     listen(){

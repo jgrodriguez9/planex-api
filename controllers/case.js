@@ -418,11 +418,8 @@ const postUploadFile = async (req, res) => {
                             relationshipMinor: '',                            
                         }
                     ))
-                    console.log(houseHoldMembers)
-                }
-                
+                }                
             }
-
 
             result.done = {
                 name: fields[0]?.value ?? '' ,

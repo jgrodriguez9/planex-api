@@ -87,9 +87,6 @@ const HouseHoldMembers = db.define("HouseHoldMembers", {
   nacionality: {
     type: DataTypes.STRING,
   },
-  relationshipMinor: {
-    type: DataTypes.STRING,
-  },
   relationshipSponsor: {
     type: DataTypes.STRING,
   },
@@ -111,6 +108,10 @@ const Stages = db.define("Stages", {
   active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
+  },
+  delete: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
 });
 
@@ -271,6 +272,20 @@ const SafetyStatus = db.define("SafetyStatus", {
   },
 });
 
+const Relationship = db.define('Relationship', {
+    name: {
+      type: DataTypes.STRING
+    },
+    active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    delete: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+})
+
 Case.hasOne(CaseInfo, { foreignKey: { name: "case_id", allowNull: false } });
 CaseInfo.belongsTo(Case, { foreignKey: "case_id" });
 
@@ -304,6 +319,9 @@ PRSAfter.belongsTo(Case, { foreignKey: "case_id" });
 Case.belongsToMany(SafetyStatusAttribute, { through: SafetyStatus });
 SafetyStatusAttribute.belongsToMany(Case, { through: SafetyStatus });
 
+Relationship.hasMany(HouseHoldMembers, {foreignKey: 'relationship_id'})
+HouseHoldMembers.belongsTo(Relationship, {foreignKey: 'relationship_id'})
+
 module.exports = {
   Case,
   CaseInfo,
@@ -316,5 +334,6 @@ module.exports = {
   PRSAfter,
   PRSOnly,
   SafetyStatusAttribute,
-  SafetyStatus
+  SafetyStatus,
+  Relationship
 };
