@@ -237,6 +237,23 @@ const PRSAfter = db.define('PRSAfter', {
     },
 });
 
+const ReportTopConfiguration = ('ReportTopConfiguration', {
+    title: {
+        type: DataTypes.STRING
+    },
+    type: {
+        type: DataTypes.ENUM('prs_case_type', 'prs_visit_type', 'prs_level', 'case_closing_summary'),
+    },
+    checked: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    show: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+})
+
 Case.hasOne(CaseInfo, {foreignKey: {name: 'case_id', allowNull: false}})
 CaseInfo.belongsTo(Case, {foreignKey: "case_id"})
 
@@ -260,6 +277,9 @@ PRSOnly.belongsTo(Case, {foreignKey: 'case_id'})
 
 Case.hasOne(PRSAfter, {foreignKey: 'case_id'})
 PRSAfter.belongsTo(Case, {foreignKey: 'case_id'})
+
+ReportTopConfiguration.hasMany(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
+ReportTopConfiguration.belongsTo(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
 
 
 module.exports = {
