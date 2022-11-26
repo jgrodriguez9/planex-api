@@ -79,6 +79,7 @@ const getCaseList = async (req, res) => {
         where: whereQuery,
       },
     ],
+    order: [[CaseInfo, 'dateAcceptance', 'DESC']],
     offset: page * size,
     limit: size,
   });
@@ -405,7 +406,7 @@ const postUploadFile = async (req, res) => {
             const houseHoldM = data?.profile?.find(item => {
                 return item.label.includes('Household Information:')
             })
-
+            console.log(JSON.stringify(houseHoldM))
             if(houseHoldM && houseHoldM !== undefined){
                 if(houseHoldM?.rows?.firstName[0].length > 0){
                     houseHoldMembers = houseHoldM?.rows?.firstName[0].map((item, index) => (
@@ -414,8 +415,7 @@ const postUploadFile = async (req, res) => {
                             nacionality: '',
                             age: houseHoldM?.rows?.currentAge[0][index],
                             gender: houseHoldM?.rows?.gender[0][index],
-                            relationshipSponsor: houseHoldM?.rows?.relationshipToSponsor[0][index],
-                            relationshipMinor: '',                            
+                            relationshipSponsor: houseHoldM?.rows?.relationshipToSponsor[0][index],                           
                         }
                     ))
                 }                
