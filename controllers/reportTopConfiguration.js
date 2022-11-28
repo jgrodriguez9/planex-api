@@ -18,7 +18,7 @@ const getReportTopConfigurationList = async (req, res) =>{
     }
 
     const { count, rows } = await ReportTopConfiguration.findAndCountAll({
-        attributes: ['id','type', 'type', 'show'],
+        attributes: ['id','title', 'type', 'show'],
         offset: page * size,
         limit: size
     });
