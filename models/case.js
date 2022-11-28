@@ -310,7 +310,7 @@ const CaseReportTopConfiguration = db.define("CaseReportTopConfiguration", {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
-  });
+});
 
 
 Case.hasOne(CaseInfo, { foreignKey: { name: "case_id", allowNull: false } });
@@ -332,9 +332,7 @@ ContactNumbers.belongsTo(SponsorInfo, { foreignKey: "sponsor_id" });
 Case.belongsToMany(Stages, { through: CaseStages });
 Stages.belongsToMany(Case, { through: CaseStages });
 
-CaseStages.hasMany(StagesNotes, {
-  foreignKey: { name: "casestages_id", allowNull: false },
-});
+CaseStages.hasMany(StagesNotes, {  foreignKey: { name: "casestages_id", allowNull: false }});
 StagesNotes.belongsTo(CaseStages, { foreignKey: "casestages_id" });
 
 Case.hasOne(PRSOnly, { foreignKey: "case_id" });
@@ -352,8 +350,8 @@ HouseHoldMembers.belongsTo(Relationship, {foreignKey: 'relationship_id'})
 ReportTopConfiguration.hasMany(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
 ReportTopConfiguration.belongsTo(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
 
-Case.belongsToMany(ReportTopConfiguration, { through: CaseReportTopConfiguration, foreignKey: 'report_id' });
-ReportTopConfiguration.belongsToMany(Case, { through: CaseReportTopConfiguration, foreignKey: 'case_id' });
+Case.belongsToMany(ReportTopConfiguration, { through: CaseReportTopConfiguration, foreignKey: 'case_id' });
+ReportTopConfiguration.belongsToMany(Case, { through: CaseReportTopConfiguration, foreignKey: 'report_id' });
 
 
 module.exports = {
@@ -370,5 +368,6 @@ module.exports = {
   SafetyStatusAttribute,
   SafetyStatus,
   Relationship,
-  ReportTopConfiguration
+  ReportTopConfiguration,
+  CaseReportTopConfiguration
 };

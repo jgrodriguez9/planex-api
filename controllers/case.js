@@ -11,6 +11,8 @@ const {
   PRSOnly,
   SponsorInfo,
   Stages,
+  ReportTopConfiguration,
+  CaseReportTopConfiguration,
 } = require("../models/case");
 const fs = require("fs");
 const { parse } = require("../helpers/pdfToJson");
@@ -103,6 +105,7 @@ const getCase = async (req, res) => {
         Stages,
         PRSAfter,
         PRSOnly,
+        ReportTopConfiguration,
       ],
     });
     if (!caseObj) {
@@ -118,6 +121,7 @@ const getCase = async (req, res) => {
       content: caseObj,
     });
   } catch (error) {
+    console.log(error)
     return res.status(500).json({
       success: false,
       msg: ERROR500,
@@ -160,6 +164,8 @@ const postCase = async (req, res) =>{
       case_id: caseId,
     }));
     await HouseHoldMembers.bulkCreate(houseHoldMembers);
+
+    console.log(body)
 
     //newCase.createCaseInfo()
     return res.status(200).json({
@@ -266,6 +272,25 @@ const putCase = async (req, res) => {
       prsAfter.case_id = id;
       await PRSAfter.create(prsAfter);
     }
+
+    //report top configuraton
+    const newHeaderReport = body.ReportTopConfigurations
+      .filter((item) => !item.id)
+      .map((it) => ({ 
+          report_id: it.CaseReportTopConfiguration.report_id,
+          case_id: id,
+          checked: it.CaseReportTopConfiguration.checked
+        }));
+    await CaseReportTopConfiguration.bulkCreate(newHeaderReport);
+    body.ReportTopConfigurations.forEach(async (elem) => {
+      if (elem.id) {
+        const headerReport = await CaseReportTopConfiguration.findByPk(elem.CaseReportTopConfiguration.id);
+        headerReport?.set({
+          checked: elem.CaseReportTopConfiguration.checked
+        });
+        await headerReport?.save();
+      }
+    });
 
     return res.status(200).json({
       success: true,
