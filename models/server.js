@@ -13,10 +13,8 @@ const houseHoldMember = require('../routes/houseHolderMembers');
 const stagesRoute = require('../routes/stages');
 const stagesNotes = require('../routes/stagesNotes');
 const caseStages = require('../routes/caseStages');
-//const safetyStatusAttribute = require('../routes/safetyStatus');
-//const safetyStatus = require('../routes/caseSafetyStatus');
-const relationshipRoute = require('../routes/relationship');
-const reporteTopConfigurationRoute = require('../routes/reporteTopConfiguration');
+const survey = require('../routes/survey')
+const surveyUserInput = require("../routes/surveyUserInput");
 
 class Server{
 
@@ -24,21 +22,19 @@ class Server{
         this.app = express();
         this.port = process.env.PORT || '8080';
         this.apiPath = {
-            auth: '/api/auth',
-            user: '/api/user',
-            case: '/api/case',
-            caseInfo: '/api/caseinfo',
-            sponsorInfo: '/api/sponsorinfo',
-            contactNumbers: '/api/contactnumbers',
-            houseHoldMember: '/api/householdermember',
-            stages: '/api/stages',
-            stagesnotes: '/api/stagesnotes',
-            casestages: '/api/casestages',
-            //safetyStatusAttribute: '/api/safety/attributes',
-            //safetyStatus: '/api/safetystatus',
-            relationship: '/api/relationship',
-            reporteTopConfiguration: '/api/reportetopconfiguration'
-        }
+          auth: "/api/auth",
+          user: "/api/user",
+          case: "/api/case",
+          caseInfo: "/api/caseinfo",
+          sponsorInfo: "/api/sponsorinfo",
+          contactNumbers: "/api/contactnumbers",
+          houseHoldMember: "/api/householdermember",
+          stages: "/api/stages",
+          stagesnotes: "/api/stagesnotes",
+          casestages: "/api/casestages",
+          survey: "/api/survey",
+          surveyUserInput: "/api/survey/userinput",
+        };
 
         //db
         this.dbConnection();
@@ -97,10 +93,8 @@ class Server{
         this.app.use(this.apiPath.stages, stagesRoute);
         this.app.use(this.apiPath.stagesnotes, stagesNotes);
         this.app.use(this.apiPath.casestages, caseStages);
-        //this.app.use(this.apiPath.safetyStatusAttribute, safetyStatusAttribute);
-        //this.app.use(this.apiPath.safetyStatus, safetyStatus);
-        this.app.use(this.apiPath.relationship, relationshipRoute)
-        this.app.use(this.apiPath.reporteTopConfiguration, reporteTopConfigurationRoute)
+        this.app.use(this.apiPath.survey, survey);
+        this.app.use(this.apiPath.surveyUserInput, surveyUserInput);
     }
 
     listen(){
