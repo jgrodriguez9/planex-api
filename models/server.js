@@ -13,8 +13,6 @@ const houseHoldMember = require('../routes/houseHolderMembers');
 const stagesRoute = require('../routes/stages');
 const stagesNotes = require('../routes/stagesNotes');
 const caseStages = require('../routes/caseStages');
-//const safetyStatusAttribute = require('../routes/safetyStatus');
-//const safetyStatus = require('../routes/caseSafetyStatus');
 const relationshipRoute = require('../routes/relationship');
 const reporteTopConfigurationRoute = require('../routes/reporteTopConfiguration');
 const roleRoutes = require('../routes/role');
@@ -37,24 +35,11 @@ class Server{
             stages: '/api/stages',
             stagesnotes: '/api/stagesnotes',
             casestages: '/api/casestages',
-            //safetyStatusAttribute: '/api/safety/attributes',
-            //safetyStatus: '/api/safetystatus',
             relationship: '/api/relationship',
             reporteTopConfiguration: '/api/reportetopconfiguration',
             role: '/api/role',
-        }
-          auth: "/api/auth",
-          user: "/api/user",
-          case: "/api/case",
-          caseInfo: "/api/caseinfo",
-          sponsorInfo: "/api/sponsorinfo",
-          contactNumbers: "/api/contactnumbers",
-          houseHoldMember: "/api/householdermember",
-          stages: "/api/stages",
-          stagesnotes: "/api/stagesnotes",
-          casestages: "/api/casestages",
-          survey: "/api/survey",
-          surveyUserInput: "/api/survey/userinput",
+            survey: "/api/survey",
+            surveyUserInput: "/api/survey/userinput",
         };
 
         //db
@@ -114,8 +99,6 @@ class Server{
         this.app.use(this.apiPath.stages, stagesRoute);
         this.app.use(this.apiPath.stagesnotes, stagesNotes);
         this.app.use(this.apiPath.casestages, caseStages);
-        //this.app.use(this.apiPath.safetyStatusAttribute, safetyStatusAttribute);
-        //this.app.use(this.apiPath.safetyStatus, safetyStatus);
         this.app.use(this.apiPath.relationship, relationshipRoute)
         this.app.use(this.apiPath.reporteTopConfiguration, reporteTopConfigurationRoute)
         this.app.use(this.apiPath.role, roleRoutes)
