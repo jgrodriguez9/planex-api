@@ -5,6 +5,10 @@ const Role = db.define("Role", {
     name: {
         type: DataTypes.STRING
     },   
+    delete: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    }
 })
 
 module.exports = Role;

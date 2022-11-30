@@ -17,6 +17,7 @@ const caseStages = require('../routes/caseStages');
 //const safetyStatus = require('../routes/caseSafetyStatus');
 const relationshipRoute = require('../routes/relationship');
 const reporteTopConfigurationRoute = require('../routes/reporteTopConfiguration');
+const roleRoutes = require('../routes/role');
 
 class Server{
 
@@ -37,7 +38,8 @@ class Server{
             //safetyStatusAttribute: '/api/safety/attributes',
             //safetyStatus: '/api/safetystatus',
             relationship: '/api/relationship',
-            reporteTopConfiguration: '/api/reportetopconfiguration'
+            reporteTopConfiguration: '/api/reportetopconfiguration',
+            role: '/api/role',
         }
 
         //db
@@ -101,6 +103,7 @@ class Server{
         //this.app.use(this.apiPath.safetyStatus, safetyStatus);
         this.app.use(this.apiPath.relationship, relationshipRoute)
         this.app.use(this.apiPath.reporteTopConfiguration, reporteTopConfigurationRoute)
+        this.app.use(this.apiPath.role, roleRoutes)
     }
 
     listen(){
