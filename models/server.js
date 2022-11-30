@@ -18,6 +18,8 @@ const caseStages = require('../routes/caseStages');
 const relationshipRoute = require('../routes/relationship');
 const reporteTopConfigurationRoute = require('../routes/reporteTopConfiguration');
 const roleRoutes = require('../routes/role');
+const survey = require('../routes/survey')
+const surveyUserInput = require("../routes/surveyUserInput");
 
 class Server{
 
@@ -41,6 +43,19 @@ class Server{
             reporteTopConfiguration: '/api/reportetopconfiguration',
             role: '/api/role',
         }
+          auth: "/api/auth",
+          user: "/api/user",
+          case: "/api/case",
+          caseInfo: "/api/caseinfo",
+          sponsorInfo: "/api/sponsorinfo",
+          contactNumbers: "/api/contactnumbers",
+          houseHoldMember: "/api/householdermember",
+          stages: "/api/stages",
+          stagesnotes: "/api/stagesnotes",
+          casestages: "/api/casestages",
+          survey: "/api/survey",
+          surveyUserInput: "/api/survey/userinput",
+        };
 
         //db
         this.dbConnection();
@@ -104,6 +119,8 @@ class Server{
         this.app.use(this.apiPath.relationship, relationshipRoute)
         this.app.use(this.apiPath.reporteTopConfiguration, reporteTopConfigurationRoute)
         this.app.use(this.apiPath.role, roleRoutes)
+        this.app.use(this.apiPath.survey, survey);
+        this.app.use(this.apiPath.surveyUserInput, surveyUserInput);
     }
 
     listen(){

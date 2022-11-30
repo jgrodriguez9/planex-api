@@ -87,6 +87,9 @@ const HouseHoldMembers = db.define("HouseHoldMembers", {
   nacionality: {
     type: DataTypes.STRING,
   },
+  relationshipMinor: {
+    type: DataTypes.STRING,
+  },
   relationshipSponsor: {
     type: DataTypes.STRING,
   },
@@ -108,10 +111,6 @@ const Stages = db.define("Stages", {
   active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
-  },
-  delete: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
   },
 });
 
@@ -238,81 +237,6 @@ const PRSAfter = db.define("PRSAfter", {
   },
 });
 
-const SafetyStatusAttribute = db.define("SafetyStatusAttribute", {
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  description: {
-    type: DataTypes.STRING,
-    defaultValue: null,
-  },
-  type: {
-    type: DataTypes.STRING,
-    defaultValue: "BOOLEAN",
-    validate:{
-      isOne:["BOOLEAN", "STRING"]
-    },
-    active:{
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    }
-  },
-});
-
-const SafetyStatus = db.define("SafetyStatus", {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-    allowNull: false,
-  },
-  value: {
-    type: DataTypes.STRING,
-  },
-});
-
-const Relationship = db.define('Relationship', {
-    name: {
-      type: DataTypes.STRING
-    },
-    active: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-    },
-    delete: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-})
-
-const ReportTopConfiguration = db.define('ReportTopConfiguration', {
-    title: {
-        type: DataTypes.STRING
-    },
-    type: {
-        type: DataTypes.ENUM('prs_case_type', 'prs_visit_type', 'prs_level', 'case_closing_summary'),
-    },
-    show: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true
-    },
-})
-
-const CaseReportTopConfiguration = db.define("CaseReportTopConfiguration", {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-      allowNull: false,
-    },
-    checked: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
-    },
-});
-
-
 Case.hasOne(CaseInfo, { foreignKey: { name: "case_id", allowNull: false } });
 CaseInfo.belongsTo(Case, { foreignKey: "case_id" });
 
@@ -332,7 +256,9 @@ ContactNumbers.belongsTo(SponsorInfo, { foreignKey: "sponsor_id" });
 Case.belongsToMany(Stages, { through: CaseStages });
 Stages.belongsToMany(Case, { through: CaseStages });
 
-CaseStages.hasMany(StagesNotes, {  foreignKey: { name: "casestages_id", allowNull: false }});
+CaseStages.hasMany(StagesNotes, {
+  foreignKey: { name: "casestages_id", allowNull: false },
+});
 StagesNotes.belongsTo(CaseStages, { foreignKey: "casestages_id" });
 
 Case.hasOne(PRSOnly, { foreignKey: "case_id" });
@@ -340,19 +266,6 @@ PRSOnly.belongsTo(Case, { foreignKey: "case_id" });
 
 Case.hasOne(PRSAfter, { foreignKey: "case_id" });
 PRSAfter.belongsTo(Case, { foreignKey: "case_id" });
-
-Case.belongsToMany(SafetyStatusAttribute, { through: SafetyStatus });
-SafetyStatusAttribute.belongsToMany(Case, { through: SafetyStatus });
-
-Relationship.hasMany(HouseHoldMembers, {foreignKey: 'relationship_id'})
-HouseHoldMembers.belongsTo(Relationship, {foreignKey: 'relationship_id'})
-
-ReportTopConfiguration.hasMany(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
-ReportTopConfiguration.belongsTo(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
-
-Case.belongsToMany(ReportTopConfiguration, { through: CaseReportTopConfiguration, foreignKey: 'case_id' });
-ReportTopConfiguration.belongsToMany(Case, { through: CaseReportTopConfiguration, foreignKey: 'report_id' });
-
 
 module.exports = {
   Case,
@@ -364,10 +277,5 @@ module.exports = {
   StagesNotes,
   CaseStages,
   PRSAfter,
-  PRSOnly,
-  SafetyStatusAttribute,
-  SafetyStatus,
-  Relationship,
-  ReportTopConfiguration,
-  CaseReportTopConfiguration
+  PRSOnly
 };
