@@ -7,6 +7,7 @@ const {
   putSurvey,
   deleteSurvey,
   getQuestionPages,
+  deleteSurveyQuestion,
 } = require("../controllers/survey");
 const { validarCampos } = require("../middlewares/validarCampos");
 const { verificarToken } = require("../middlewares/verificarToken");
@@ -28,6 +29,7 @@ router.put(
   putSurvey
 );
 router.post("/sections", verificarToken, getQuestionPages);
+router.delete("/surveyquestion/:id", verificarToken, deleteSurveyQuestion);
 router.delete("/:id", verificarToken, deleteSurvey);
 
 module.exports = router;
