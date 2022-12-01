@@ -322,6 +322,14 @@ SafetyStatusAttribute.belongsToMany(Case, { through: SafetyStatus });
 Relationship.hasMany(HouseHoldMembers, {foreignKey: 'relationship_id'})
 HouseHoldMembers.belongsTo(Relationship, {foreignKey: 'relationship_id'})
 
+ReportTopConfiguration.hasMany(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
+ReportTopConfiguration.belongsTo(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
+
+Case.belongsToMany(ReportTopConfiguration, { through: CaseReportTopConfiguration, foreignKey: 'case_id' });
+ReportTopConfiguration.belongsToMany(Case, { through: CaseReportTopConfiguration, foreignKey: 'report_id' });
+
+
+
 module.exports = {
   Case,
   CaseInfo,
