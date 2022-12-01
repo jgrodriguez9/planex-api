@@ -286,33 +286,6 @@ const Relationship = db.define('Relationship', {
     },
 })
 
-const ReportTopConfiguration = db.define('ReportTopConfiguration', {
-    title: {
-        type: DataTypes.STRING
-    },
-    type: {
-        type: DataTypes.ENUM('prs_case_type', 'prs_visit_type', 'prs_level', 'case_closing_summary'),
-    },
-    show: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true
-    },
-})
-
-const CaseReportTopConfiguration = db.define("CaseReportTopConfiguration", {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-      allowNull: false,
-    },
-    checked: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
-    },
-});
-
-
 Case.hasOne(CaseInfo, { foreignKey: { name: "case_id", allowNull: false } });
 CaseInfo.belongsTo(Case, { foreignKey: "case_id" });
 
@@ -332,7 +305,9 @@ ContactNumbers.belongsTo(SponsorInfo, { foreignKey: "sponsor_id" });
 Case.belongsToMany(Stages, { through: CaseStages });
 Stages.belongsToMany(Case, { through: CaseStages });
 
-CaseStages.hasMany(StagesNotes, {  foreignKey: { name: "casestages_id", allowNull: false }});
+CaseStages.hasMany(StagesNotes, {
+  foreignKey: { name: "casestages_id", allowNull: false },
+});
 StagesNotes.belongsTo(CaseStages, { foreignKey: "casestages_id" });
 
 Case.hasOne(PRSOnly, { foreignKey: "case_id" });
@@ -354,6 +329,7 @@ Case.belongsToMany(ReportTopConfiguration, { through: CaseReportTopConfiguration
 ReportTopConfiguration.belongsToMany(Case, { through: CaseReportTopConfiguration, foreignKey: 'report_id' });
 
 
+
 module.exports = {
   Case,
   CaseInfo,
@@ -367,7 +343,5 @@ module.exports = {
   PRSOnly,
   SafetyStatusAttribute,
   SafetyStatus,
-  Relationship,
-  ReportTopConfiguration,
-  CaseReportTopConfiguration
+  Relationship
 };

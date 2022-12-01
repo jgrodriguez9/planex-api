@@ -13,11 +13,13 @@ const houseHoldMember = require('../routes/houseHolderMembers');
 const stagesRoute = require('../routes/stages');
 const stagesNotes = require('../routes/stagesNotes');
 const caseStages = require('../routes/caseStages');
-//const safetyStatusAttribute = require('../routes/safetyStatus');
-//const safetyStatus = require('../routes/caseSafetyStatus');
 const relationshipRoute = require('../routes/relationship');
 const reporteTopConfigurationRoute = require('../routes/reporteTopConfiguration');
 const roleRoutes = require('../routes/role');
+const survey = require('../routes/survey')
+const surveyUserInput = require("../routes/surveyUserInput");
+const Role = require('./role');
+const { data } = require('../data/roles');
 
 class Server{
 
@@ -35,12 +37,12 @@ class Server{
             stages: '/api/stages',
             stagesnotes: '/api/stagesnotes',
             casestages: '/api/casestages',
-            //safetyStatusAttribute: '/api/safety/attributes',
-            //safetyStatus: '/api/safetystatus',
             relationship: '/api/relationship',
             reporteTopConfiguration: '/api/reportetopconfiguration',
             role: '/api/role',
-        }
+            survey: "/api/survey",
+            surveyUserInput: "/api/survey/userinput",
+        };
 
         //db
         this.dbConnection();
@@ -62,7 +64,7 @@ class Server{
             //console.log('database online sync')
 
             // //data default
-            // Role.bulkCreate(dataRole)
+            //Role.bulkCreate(data)
             // User.create({
             //     name: 'Admin',
             //     email: 'admin@admin.com',
@@ -99,11 +101,11 @@ class Server{
         this.app.use(this.apiPath.stages, stagesRoute);
         this.app.use(this.apiPath.stagesnotes, stagesNotes);
         this.app.use(this.apiPath.casestages, caseStages);
-        //this.app.use(this.apiPath.safetyStatusAttribute, safetyStatusAttribute);
-        //this.app.use(this.apiPath.safetyStatus, safetyStatus);
         this.app.use(this.apiPath.relationship, relationshipRoute)
         this.app.use(this.apiPath.reporteTopConfiguration, reporteTopConfigurationRoute)
         this.app.use(this.apiPath.role, roleRoutes)
+        this.app.use(this.apiPath.survey, survey);
+        this.app.use(this.apiPath.surveyUserInput, surveyUserInput);
     }
 
     listen(){
