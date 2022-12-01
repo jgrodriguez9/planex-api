@@ -87,9 +87,6 @@ const HouseHoldMembers = db.define("HouseHoldMembers", {
   nacionality: {
     type: DataTypes.STRING,
   },
-  relationshipMinor: {
-    type: DataTypes.STRING,
-  },
   relationshipSponsor: {
     type: DataTypes.STRING,
   },
@@ -111,6 +108,10 @@ const Stages = db.define("Stages", {
   active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
+  },
+  delete: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
 });
 
@@ -237,6 +238,54 @@ const PRSAfter = db.define("PRSAfter", {
   },
 });
 
+const SafetyStatusAttribute = db.define("SafetyStatusAttribute", {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  description: {
+    type: DataTypes.STRING,
+    defaultValue: null,
+  },
+  type: {
+    type: DataTypes.STRING,
+    defaultValue: "BOOLEAN",
+    validate:{
+      isOne:["BOOLEAN", "STRING"]
+    },
+    active:{
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    }
+  },
+});
+
+const SafetyStatus = db.define("SafetyStatus", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false,
+  },
+  value: {
+    type: DataTypes.STRING,
+  },
+});
+
+const Relationship = db.define('Relationship', {
+    name: {
+      type: DataTypes.STRING
+    },
+    active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    delete: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+})
+
 Case.hasOne(CaseInfo, { foreignKey: { name: "case_id", allowNull: false } });
 CaseInfo.belongsTo(Case, { foreignKey: "case_id" });
 
@@ -267,6 +316,12 @@ PRSOnly.belongsTo(Case, { foreignKey: "case_id" });
 Case.hasOne(PRSAfter, { foreignKey: "case_id" });
 PRSAfter.belongsTo(Case, { foreignKey: "case_id" });
 
+Case.belongsToMany(SafetyStatusAttribute, { through: SafetyStatus });
+SafetyStatusAttribute.belongsToMany(Case, { through: SafetyStatus });
+
+Relationship.hasMany(HouseHoldMembers, {foreignKey: 'relationship_id'})
+HouseHoldMembers.belongsTo(Relationship, {foreignKey: 'relationship_id'})
+
 module.exports = {
   Case,
   CaseInfo,
@@ -277,5 +332,8 @@ module.exports = {
   StagesNotes,
   CaseStages,
   PRSAfter,
-  PRSOnly
+  PRSOnly,
+  SafetyStatusAttribute,
+  SafetyStatus,
+  Relationship
 };
