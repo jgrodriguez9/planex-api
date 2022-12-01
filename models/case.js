@@ -354,6 +354,7 @@ Case.belongsToMany(ReportTopConfiguration, { through: CaseReportTopConfiguration
 ReportTopConfiguration.belongsToMany(Case, { through: CaseReportTopConfiguration, foreignKey: 'report_id' });
 
 
+
 module.exports = {
   Case,
   CaseInfo,
