@@ -18,6 +18,8 @@ const reporteTopConfigurationRoute = require('../routes/reporteTopConfiguration'
 const roleRoutes = require('../routes/role');
 const survey = require('../routes/survey')
 const surveyUserInput = require("../routes/surveyUserInput");
+const Role = require('./role');
+const { data } = require('../data/roles');
 
 class Server{
 
@@ -62,7 +64,7 @@ class Server{
             //console.log('database online sync')
 
             // //data default
-            // Role.bulkCreate(dataRole)
+            //Role.bulkCreate(data)
             // User.create({
             //     name: 'Admin',
             //     email: 'admin@admin.com',
