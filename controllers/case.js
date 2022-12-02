@@ -16,7 +16,8 @@ const {
 } = require("../models/case");
 const fs = require("fs");
 const { parse } = require("../helpers/pdfToJson");
-const { SurveyUserInput } = require("../models/survey");
+const { SurveyUserInput, SurveyQuestionAnswer, SurveyUserInputLine } = require("../models/survey");
+const { addSurveyUserInputByIdCase } = require("./surveyUserInput");
 
 const upload = multer({
   fileFilter: (req, file, cb) => {
@@ -107,7 +108,14 @@ const getCase = async (req, res) => {
         PRSAfter,
         PRSOnly,
         ReportTopConfiguration,
-        SurveyUserInput,
+        {
+          model: SurveyUserInput,
+          include:{
+            model: SurveyUserInputLine, 
+            as: 'user_input_line_ids',
+            include: {model: SurveyQuestionAnswer}
+          }          
+        }
       ],
     });
     if (!caseObj) {
@@ -293,6 +301,7 @@ const putCase = async (req, res) => {
     });
 
     //safety status report
+    await addSurveyUserInputByIdCase(body.SurveyUserInputs, id)
 
     return res.status(200).json({
       success: true,
