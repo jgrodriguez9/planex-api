@@ -3,6 +3,16 @@ const db = require("../db/connections");
 const { Case } = require("./case");
 
 const Survey = db.define("Survey", {
+  section: {
+    type: DataTypes.STRING,
+    validate: {
+      isIn: [
+        [
+          "safety_status"
+        ],
+      ],
+    },
+  },
   title: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -204,7 +214,7 @@ SurveyUserInputLine.belongsTo(SurveyQuestionAnswer, {
 });
 
 // Case User Input
-Case.hasOne(SurveyUserInput, { foreignKey: { name: "case_id" } });
+Case.hasMany(SurveyUserInput, { foreignKey: { name: "case_id" } });
 SurveyUserInput.belongsTo(Case, {
   foreignKey: "case_id",
 });

@@ -16,6 +16,7 @@ const {
 } = require("../models/case");
 const fs = require("fs");
 const { parse } = require("../helpers/pdfToJson");
+const { SurveyUserInput } = require("../models/survey");
 
 const upload = multer({
   fileFilter: (req, file, cb) => {
@@ -106,6 +107,7 @@ const getCase = async (req, res) => {
         PRSAfter,
         PRSOnly,
         ReportTopConfiguration,
+        SurveyUserInput,
       ],
     });
     if (!caseObj) {
@@ -254,8 +256,6 @@ const putCase = async (req, res) => {
     const {
       reasonReferral: { prsOnly, prsAfter },
     } = body;
-    console.log(prsOnly);
-    console.log(prsAfter);
     if (prsOnly && prsOnly.id) {
       const prsOnlyToUpdate = await PRSOnly.findByPk(prsOnly.id);
       prsOnlyToUpdate?.set(prsOnly);
@@ -291,6 +291,8 @@ const putCase = async (req, res) => {
         await headerReport?.save();
       }
     });
+
+    //safety status report
 
     return res.status(200).json({
       success: true,
