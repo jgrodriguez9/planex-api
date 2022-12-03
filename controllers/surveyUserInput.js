@@ -323,28 +323,40 @@ const questionsBySurveyNotPage = async (surveyId) => {
   return questions || [];
 };
 
-const toDeleteSAnswerIds = async (question_id, user_input_id) => {
-  const sAnswerIdsToUpdate = await SurveyUserInputLine.findAll({
-    where: {
-      question_id: question_id,
-      user_input_id: user_input_id,
-      suggested_answer_id: {
-        [Op.not]: null,
-      },
-    },
-  });
-  sAnswerIdsToUpdate?.forEach(async (it) => {
-    await it.update({ delete: true });
-  });
+const toDeleteSAnswerIds = async (user_input_line_ids) => {
+  //const answerdToDelete = await SurveyUserInputLine.findByPk(id)
+  //await answerdToDelete.destroy();
+  user_input_line_ids.forEach(async (it) => {
+    if(it.input_line_id){
+      const inputLineDelete = await SurveyUserInputLine.findByPk(it.input_line_id)
+      await inputLineDelete.destroy();
+    }
+    
+  })
+  // const sAnswerIdsToUpdate = await SurveyUserInputLine.findAll({
+  //   where: {
+  //     question_id: question_id,
+  //     user_input_id: user_input_id,
+  //     suggested_answer_id: {
+  //       [Op.not]: null,
+  //     },
+  //   },
+  // });
+  // console.log(sAnswerIdsToUpdate)
+  // sAnswerIdsToUpdate?.forEach(async (it) => {
+  //   //await it.update({ delete: true });
+  //   await it.destroy()
+  // });
 };
 
 const addSurveyUserInputByIdCase = async (surveys, caseId) => {
 
   try {
     surveys.forEach(async (survey) => {
+      toDeleteSAnswerIds(survey.user_input_line_ids);
       let userInputToCreateOrUpdate = null;
-      if (survey.survey_input_id !== undefined || survey.survey_input_id != "null")
-        userInputToCreateOrUpdate = await SurveyUserInput.findByPk(survey.survey_input_id);
+      if (survey.id !== undefined || survey.id != "null")
+        userInputToCreateOrUpdate = await SurveyUserInput.findByPk(survey.id);
     
         if (!userInputToCreateOrUpdate) {
           userInputToCreateOrUpdate = await SurveyUserInput.create({
@@ -392,12 +404,12 @@ const addSurveyUserInputByIdCase = async (surveys, caseId) => {
             case "datetime": // DateTime
               row.value_datetime = moment(fieldValue);
             default:
-              toDeleteSAnswerIds(it.id, userInputToCreateOrUpdate.id);
+              //toDeleteSAnswerIds(it.id, userInputToCreateOrUpdate.id);
               const suggestions = it.suggested_answer_ids?.filter((label) => {                
                 return (
-                  survey.answers.find(sa=>sa[`answer_${it.id}_suggestion_${camelCase(label.value)}`]) !== undefined 
+                  survey.user_input_line_ids.find(sa=>sa[`answer_${it.id}_suggestion_${camelCase(label.value)}`]) !== undefined 
                     &&
-                    survey.answers.find(sa=>sa[`answer_${it.id}_suggestion_${camelCase(label.value)}`] === true) !== undefined
+                    survey.user_input_line_ids.find(sa=>sa[`answer_${it.id}_suggestion_${camelCase(label.value)}`] === true) !== undefined
                 );
               });
               row = suggestions?.map((suggestion) => ({
