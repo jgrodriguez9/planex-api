@@ -33,7 +33,6 @@ const getSurveys = async (req, res) => {
   });
 
   var output = [];
-
   rows.forEach((survey) => {
     const row = {
       id: survey.id,
@@ -107,6 +106,7 @@ const getSurvey = async (req, res) => {
       include: [
         {
           model: SurveyQuestion,
+          where: { delete: false},
           include: [
             { model: SurveyQuestionAnswer, as: "suggested_answer_ids" },
           ],
@@ -124,6 +124,7 @@ const getSurvey = async (req, res) => {
       id: survey.id,
       title: survey.title,
       active: survey.active,
+      section: survey.section,
       sectionsQ: [],
       questions: [],
     };
@@ -174,7 +175,7 @@ const getSurvey = async (req, res) => {
         labels:
           it.question_type === "simple_choice" ||
           it.question_type === "multiple_choice"
-            ? it.suggested_answer_ids.map((it) => ({ id: it.id, label: it.value })) || []
+            ? it.suggested_answer_ids.map((it) => ({ id: it.id, value: it.value })) || []
             : [],
       })) || [];
     row.sectionsQ = Object.fromEntries(sectionMap.entries());
@@ -212,18 +213,18 @@ const postSurvey = async (req, res) => {
     }));
 
     const newQuestions = await SurveyQuestion.bulkCreate(questions);
-    let labels = null;
+    let labels = [];
     newQuestions.forEach(async (question, index) => {
       if (
         !question.is_page &&
         (question.question_type === "simple_choice" ||
           question.question_type === "multiple_choice")
       ) {
-        labels =
+        labels.push(...
           questions[index].labels?.map((it) => ({
             ...it,
             question_id: question.getDataValue("id"),
-          })) || [];
+          })));
       }
     });
 
@@ -278,17 +279,17 @@ const putSurvey = async (req, res) => {
       }));
 
     const newQuestions = await SurveyQuestion.bulkCreate(questions);
-    let labels = null;
+    let labels = [];
     newQuestions?.forEach((question, index) => {
       if (
         !question.is_page &&
         (question.question_type === "simple_choice" ||
           question.question_type === "multiple_choice")
       ) {
-        labels = questions[index].labels?.map((it) => ({
+        labels.push(...questions[index].labels?.map((it) => ({
           ...it,
           question_id: question.getDataValue("id"),
-        }));
+        })));
       }
     });
     if (!!labels) await SurveyQuestionAnswer.bulkCreate(labels);
@@ -392,6 +393,126 @@ const deleteSurvey = async (req, res) => {
   }
 };
 
+const deleteSurveyQuestion = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const survey = await SurveyQuestion.findByPk(id);
+    if (!survey) {
+      return res.status(404).json({
+        success: false,
+        msg: "Can't retrieve survey " + id,
+      });
+    }
+
+    await survey.update({ delete: true });
+    return res.status(200).json({
+      success: true,
+      msg: "Success!",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      msg: ERROR500,
+      errors: error.errors,
+    });
+  } 
+}
+
+const getSurveyBySection = async (req, res) => {
+  const { section } = req.params;
+  try {
+    const survey = await Survey.findOne({
+      where: { section: section },
+      include: [
+        {
+          model: SurveyQuestion,
+          where: { delete: false},
+          include: [
+            { model: SurveyQuestionAnswer, as: "suggested_answer_ids" },
+          ],
+        },
+      ],
+    });
+    if (!survey) {
+      return res.status(404).json({
+        success: false,
+        msg: "Can't retrieve survey " + id,
+      });
+    }
+
+    const row = {
+      id: survey.id,
+      title: survey.title,
+      active: survey.active,
+      section: survey.section,
+      sectionsQ: [],
+      questions: [],
+    };
+
+    const bySectionsQs = R.groupBy((question) => {
+      return question.is_page
+        ? "sections"
+        : question.page_id
+        ? "sectionQ"
+        : "questions";
+    }, survey.SurveyQuestions);
+
+    const sectionMap = new Map();
+    bySectionsQs.sections?.forEach((section) => {
+      sectionMap.set(section.id, {
+        id: section.id,
+        title: section.title,
+        questions: [],
+      });
+    });
+
+    bySectionsQs.sectionQ?.forEach((question) => {
+      const q = {
+        id: question.id,
+        title: question.title,
+        description: question.description,
+        placeholder: question.placeholder,
+        question_type: question.question_type,
+      };
+      if (
+        question.question_type === "simple_choice" ||
+        question.question_type === "multiple_choice"
+      ) {
+        q.labels =
+          question.suggested_answer_ids.map((it) => ({ id: it.id, label: it.value })) ||
+          [];
+      }
+      sectionMap.get(question.page_id).questions.push(q);
+    });
+
+    row.questions =
+      bySectionsQs.questions.map((it) => ({
+        id: it.id,
+        title: it.title,
+        description: it.description,
+        placeholder: it.placeholder,
+        question_type: it.question_type,
+        labels:
+          it.question_type === "simple_choice" ||
+          it.question_type === "multiple_choice"
+            ? it.suggested_answer_ids.map((it) => ({ id: it.id, value: it.value })) || []
+            : [],
+      })) || [];
+    row.sectionsQ = Object.fromEntries(sectionMap.entries());
+
+    return res.status(200).json({
+      success: true,
+      msg: "Success!",
+      content: row,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      msg: ERROR500,
+      errors: error,
+    });
+  }
+};
+
 module.exports = {
   getSurveys,
   getSurvey,
@@ -399,4 +520,6 @@ module.exports = {
   putSurvey,
   deleteSurvey,
   getQuestionPages,
+  deleteSurveyQuestion,
+  getSurveyBySection
 };

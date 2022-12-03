@@ -316,28 +316,131 @@ const questionsBySurveyNotPage = async (surveyId) => {
     where: {
       survey_id: surveyId,
       is_page: false,
+      delete: false,
     },
     include: [{ model: SurveyQuestionAnswer, as: "suggested_answer_ids" }],
   });
   return questions || [];
 };
 
-const toDeleteSAnswerIds = async (question_id, user_input_id) => {
-  const sAnswerIdsToUpdate = await SurveyUserInputLine.findAll({
-    where: {
-      question_id: question_id,
-      user_input_id: user_input_id,
-      suggested_answer_id: {
-        [Op.not]: null,
-      },
-    },
-  });
-  sAnswerIdsToUpdate?.forEach(async (it) => {
-    await it.update({ delete: true });
-  });
+const toDeleteSAnswerIds = async (user_input_line_ids) => {
+  //const answerdToDelete = await SurveyUserInputLine.findByPk(id)
+  //await answerdToDelete.destroy();
+  user_input_line_ids.forEach(async (it) => {
+    if(it.input_line_id){
+      const inputLineDelete = await SurveyUserInputLine.findByPk(it.input_line_id)
+      await inputLineDelete.destroy();
+    }
+    
+  })
+  // const sAnswerIdsToUpdate = await SurveyUserInputLine.findAll({
+  //   where: {
+  //     question_id: question_id,
+  //     user_input_id: user_input_id,
+  //     suggested_answer_id: {
+  //       [Op.not]: null,
+  //     },
+  //   },
+  // });
+  // console.log(sAnswerIdsToUpdate)
+  // sAnswerIdsToUpdate?.forEach(async (it) => {
+  //   //await it.update({ delete: true });
+  //   await it.destroy()
+  // });
 };
+
+const addSurveyUserInputByIdCase = async (surveys, caseId) => {
+
+  try {
+    surveys.forEach(async (survey) => {
+      toDeleteSAnswerIds(survey.user_input_line_ids);
+      let userInputToCreateOrUpdate = null;
+      if (survey.id !== undefined || survey.id != "null")
+        userInputToCreateOrUpdate = await SurveyUserInput.findByPk(survey.id);
+    
+        if (!userInputToCreateOrUpdate) {
+          userInputToCreateOrUpdate = await SurveyUserInput.create({
+            end_datetime: moment.now(),
+            survey_id: survey.survey_id,
+            case_id: caseId,
+          });
+        } else {
+          // userInputToCreateOrUpdate?.set({
+          //   state: data.state,
+          //   deadline:moment.now(),
+          // });
+          // userInputToCreateOrUpdate = await userInputToCreateOrUpdate?.save();
+        }
+
+        let answers = [];
+        const questions = await questionsBySurveyNotPage(
+          userInputToCreateOrUpdate.survey_id
+        );
+        questions?.forEach(async (it) => {
+          let row = {
+            answer_type:
+              it.question_type === "simple_choice" ||
+              it.question_type === "multiple_choice"
+                ? "suggestion"
+                : it.question_type,
+            user_input_id: userInputToCreateOrUpdate.id,
+            question_id: it.id,
+          };
+          const fieldValue = `answer_${it.id}_value_${row.answer_type}`;
+          switch (row.answer_type) {
+            case "text_box": // Free Text
+              row.value_text_box = fieldValue;
+            case "char_box": // Text
+              row.value_char_box = fieldValue;
+              break;
+            case "numerical_box": // Number
+              row.value_numerical_box = Number.parseFloat(fieldValue) || 0;
+              break;
+            case "date": // Date
+              row.value_date = moment(fieldValue, "YYYY-MM-DD").format(
+                "DD-MM-YYYY"
+              );
+              break;
+            case "datetime": // DateTime
+              row.value_datetime = moment(fieldValue);
+            default:
+              //toDeleteSAnswerIds(it.id, userInputToCreateOrUpdate.id);
+              const suggestions = it.suggested_answer_ids?.filter((label) => {                
+                return (
+                  survey.user_input_line_ids.find(sa=>sa[`answer_${it.id}_suggestion_${camelCase(label.value)}`]) !== undefined 
+                    &&
+                    survey.user_input_line_ids.find(sa=>sa[`answer_${it.id}_suggestion_${camelCase(label.value)}`] === true) !== undefined
+                );
+              });
+              row = suggestions?.map((suggestion) => ({
+                ...row,
+                suggested_answer_id: suggestion.id,
+              }));
+              break;
+          }
+          if(isArray(row)){
+            answers.push(...row)
+          }else{
+            answers.push(row)
+          }
+        });
+        if (!!answers) {
+          const newAnswers = await SurveyUserInputLine.bulkCreate(answers);
+          userInputToCreateOrUpdate?.set({
+            state: "done",
+          });
+          userInputToCreateOrUpdate = await userInputToCreateOrUpdate?.save();
+        }    
+    })
+  } catch (error) {
+    //no pasa nadaa error
+    console.log(error)
+  }
+
+}
 
 module.exports = {
   getSurveyUserInputByIdCase,
   postSurveyUserInputByIdCase,
+  addSurveyUserInputByIdCase,
 };

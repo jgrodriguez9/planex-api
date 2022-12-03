@@ -3,6 +3,16 @@ const db = require("../db/connections");
 const { Case } = require("./case");
 
 const Survey = db.define("Survey", {
+  section: {
+    type: DataTypes.STRING,
+    validate: {
+      isIn: [
+        [
+          "safety_status"
+        ],
+      ],
+    },
+  },
   title: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -26,6 +36,10 @@ const Survey = db.define("Survey", {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  delete: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  }
 });
 
 const SurveyQuestion = db.define("SurveyQuestion", {
@@ -65,6 +79,10 @@ const SurveyQuestion = db.define("SurveyQuestion", {
   sequence: {
     type: DataTypes.INTEGER,
   },
+  delete: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  }
 });
 
 const SurveyQuestionAnswer = db.define("SurveyQuestionAnswer", {
@@ -75,6 +93,10 @@ const SurveyQuestionAnswer = db.define("SurveyQuestionAnswer", {
     type: DataTypes.CHAR, // Suggested Value
     allowNull: false,
   },
+  delete: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  }
 });
 
 const SurveyUserInput = db.define("SurveyUserInput", {
@@ -192,7 +214,7 @@ SurveyUserInputLine.belongsTo(SurveyQuestionAnswer, {
 });
 
 // Case User Input
-Case.hasOne(SurveyUserInput, { foreignKey: { name: "case_id" } });
+Case.hasMany(SurveyUserInput, { foreignKey: { name: "case_id" } });
 SurveyUserInput.belongsTo(Case, {
   foreignKey: "case_id",
 });

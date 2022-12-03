@@ -7,6 +7,8 @@ const {
   putSurvey,
   deleteSurvey,
   getQuestionPages,
+  deleteSurveyQuestion,
+  getSurveyBySection,
 } = require("../controllers/survey");
 const { validarCampos } = require("../middlewares/validarCampos");
 const { verificarToken } = require("../middlewares/verificarToken");
@@ -14,6 +16,7 @@ const { verificarToken } = require("../middlewares/verificarToken");
 const router = Router();
 
 router.get("/", verificarToken, getSurveys);
+router.get("/section/:section", verificarToken, getSurveyBySection);
 router.get("/:id", verificarToken, getSurvey);
 router.post(
   "/",
@@ -28,6 +31,7 @@ router.put(
   putSurvey
 );
 router.post("/sections", verificarToken, getQuestionPages);
+router.delete("/surveyquestion/:id", verificarToken, deleteSurveyQuestion);
 router.delete("/:id", verificarToken, deleteSurvey);
 
 module.exports = router;

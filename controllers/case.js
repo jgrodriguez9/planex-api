@@ -16,6 +16,8 @@ const {
 } = require("../models/case");
 const fs = require("fs");
 const { parse } = require("../helpers/pdfToJson");
+const { SurveyUserInput, SurveyQuestionAnswer, SurveyUserInputLine } = require("../models/survey");
+const { addSurveyUserInputByIdCase } = require("./surveyUserInput");
 
 const upload = multer({
   fileFilter: (req, file, cb) => {
@@ -106,6 +108,14 @@ const getCase = async (req, res) => {
         PRSAfter,
         PRSOnly,
         ReportTopConfiguration,
+        {
+          model: SurveyUserInput,
+          include:{
+            model: SurveyUserInputLine, 
+            as: 'user_input_line_ids',
+            include: {model: SurveyQuestionAnswer}
+          }          
+        }
       ],
     });
     if (!caseObj) {
@@ -254,8 +264,6 @@ const putCase = async (req, res) => {
     const {
       reasonReferral: { prsOnly, prsAfter },
     } = body;
-    console.log(prsOnly);
-    console.log(prsAfter);
     if (prsOnly && prsOnly.id) {
       const prsOnlyToUpdate = await PRSOnly.findByPk(prsOnly.id);
       prsOnlyToUpdate?.set(prsOnly);
@@ -291,6 +299,9 @@ const putCase = async (req, res) => {
         await headerReport?.save();
       }
     });
+
+    //safety status report
+    await addSurveyUserInputByIdCase(body.SurveyUserInputs, id)
 
     return res.status(200).json({
       success: true,
