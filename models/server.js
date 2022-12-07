@@ -43,6 +43,17 @@ class Server{
             survey: "/api/survey",
             surveyUserInput: "/api/survey/userinput",
         };
+        this.whitelist = process.env.NODE_ENV === 'production' ? ["https://apipenuel.plan-nex.com"] : ["http://localhost:5000"]
+        this.corsOptions = {
+            origin: function (origin, callback) {          
+              if (!origin || whitelist.indexOf(origin) !== -1) {          
+                callback(null, true)          
+              } else {          
+                callback(new Error("Not allowed by CORS"))          
+              }          
+            },          
+            credentials: true,          
+        }
 
         //db
         this.dbConnection();
@@ -81,7 +92,7 @@ class Server{
 
     middlewares(){
         //cors
-        this.app.use(cors());
+        this.app.use(cors(this.corsOptions));
 
         //parse body
         this.app.use(express.json({limit: '10000kb'}));
