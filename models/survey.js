@@ -8,7 +8,8 @@ const Survey = db.define("Survey", {
     validate: {
       isIn: [
         [
-          "safety_status"
+          "safety_status",
+          "case_closure_program_outcomes_indicators"
         ],
       ],
     },

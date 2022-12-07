@@ -22,15 +22,11 @@ const getSurveys = async (req, res) => {
 
   const { count, rows } = await Survey.findAndCountAll({
     attributes: { exclude: ["description_done", "answer_done_count"] },
-    include: [
-      {
-        model: SurveyQuestion,
-        include: [{ model: SurveyQuestionAnswer, as: "suggested_answer_ids" }],
-      },
-    ],
     offset: page * size,
     limit: size,
   });
+
+  console.log(JSON.stringify(rows))
 
   var output = [];
   rows.forEach((survey) => {
@@ -42,56 +38,56 @@ const getSurveys = async (req, res) => {
       questions: [],
     };
 
-    const bySectionsQs = R.groupBy((question) => {
-      return question.is_page
-        ? "sections"
-        : question.page_id
-        ? "sectionQ"
-        : "questions";
-    }, survey.SurveyQuestions);
+    // const bySectionsQs = R.groupBy((question) => {
+    //   return question.is_page
+    //     ? "sections"
+    //     : question.page_id
+    //     ? "sectionQ"
+    //     : "questions";
+    // }, survey.SurveyQuestions);
 
-    const sectionMap = new Map();
-    bySectionsQs.sections?.forEach((section) => {
-      sectionMap.set(section.id, {
-        id: section.id,
-        title: section.title,
-        questions: [],
-      });
-    });
+    // const sectionMap = new Map();
+    // bySectionsQs.sections?.forEach((section) => {
+    //   sectionMap.set(section.id, {
+    //     id: section.id,
+    //     title: section.title,
+    //     questions: [],
+    //   });
+    // });
 
-    bySectionsQs.sectionQ?.forEach((question) => {
-      const q = {
-        id: question.id,
-        title: question.title,
-        description: question.description,
-        placeholder: question.placeholder,
-        question_type: question.question_type,
-      };
-      if (
-        question.question_type === "simple_choice" ||
-        question.question_type === "multiple_choice"
-      ) {
-        q.labels =
-          question.suggested_answer_ids.map((it) => ({ id: it.id, label: it.value })) ||
-          [];
-      }
-      sectionMap.get(question.page_id).questions.push(q);
-    });
+    // bySectionsQs.sectionQ?.forEach((question) => {
+    //   const q = {
+    //     id: question.id,
+    //     title: question.title,
+    //     description: question.description,
+    //     placeholder: question.placeholder,
+    //     question_type: question.question_type,
+    //   };
+    //   if (
+    //     question.question_type === "simple_choice" ||
+    //     question.question_type === "multiple_choice"
+    //   ) {
+    //     q.labels =
+    //       question.suggested_answer_ids.map((it) => ({ id: it.id, label: it.value })) ||
+    //       [];
+    //   }
+    //   sectionMap.get(question.page_id).questions.push(q);
+    // });
 
-    row.questions =
-      bySectionsQs.questions.map((it) => ({
-        id: it.id,
-        title: it.title,
-        description: it.description,
-        placeholder: it.placeholder,
-        question_type: it.question_type,
-        labels:
-          it.question_type === "simple_choice" ||
-          it.question_type === "multiple_choice"
-            ? it.suggested_answer_ids.map((it) => ({ id: it.id, label: it.value })) || []
-            : [],
-      })) || [];
-    row.sectionsQ = Object.fromEntries(sectionMap.entries());
+    // row.questions =
+    //   bySectionsQs.questions?.map((it) => ({
+    //     id: it.id,
+    //     title: it.title,
+    //     description: it.description,
+    //     placeholder: it.placeholder,
+    //     question_type: it.question_type,
+    //     labels:
+    //       it.question_type === "simple_choice" ||
+    //       it.question_type === "multiple_choice"
+    //         ? it.suggested_answer_ids.map((it) => ({ id: it.id, label: it.value })) || []
+    //         : [],
+    //   })) || [];
+    // row.sectionsQ = Object.fromEntries(sectionMap.entries());
     output.push(row);
   });
 
@@ -130,11 +126,7 @@ const getSurvey = async (req, res) => {
     };
 
     const bySectionsQs = R.groupBy((question) => {
-      return question.is_page
-        ? "sections"
-        : question.page_id
-        ? "sectionQ"
-        : "questions";
+      return "questions";
     }, survey.SurveyQuestions);
 
     const sectionMap = new Map();
@@ -166,16 +158,18 @@ const getSurvey = async (req, res) => {
     });
 
     row.questions =
-      bySectionsQs.questions.map((it) => ({
+      bySectionsQs.questions?.map((it) => ({
         id: it.id,
         title: it.title,
         description: it.description,
         placeholder: it.placeholder,
         question_type: it.question_type,
+        is_page: it.is_page,
+        page_id: it.page_id,
         labels:
           it.question_type === "simple_choice" ||
           it.question_type === "multiple_choice"
-            ? it.suggested_answer_ids.map((it) => ({ id: it.id, value: it.value })) || []
+            ? it.suggested_answer_ids?.map((it) => ({ id: it.id, value: it.value })) || []
             : [],
       })) || [];
     row.sectionsQ = Object.fromEntries(sectionMap.entries());
@@ -201,6 +195,7 @@ const postSurvey = async (req, res) => {
       title: body.title,
       description: body.description,
       description_done: body.description_done,
+      section: body.section,
       question_count: body.questions?.length || 0,
     };
 
