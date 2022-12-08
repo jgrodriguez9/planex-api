@@ -18,8 +18,11 @@ const reporteTopConfigurationRoute = require('../routes/reporteTopConfiguration'
 const roleRoutes = require('../routes/role');
 const survey = require('../routes/survey')
 const surveyUserInput = require("../routes/surveyUserInput");
-const Role = require('./role');
-const { data } = require('../data/roles');
+//const Role = require('./role');
+//const User = require('./user');
+//const { encrypted } = require("../common/util");
+
+//const { data } = require('../data/roles');
 
 class Server{
 
@@ -43,6 +46,17 @@ class Server{
             survey: "/api/survey",
             surveyUserInput: "/api/survey/userinput",
         };
+        const whitelist = process.env.NODE_ENV === 'production' ? ["https://penuel.plan-nex.com"] : ["http://localhost:3000"]
+        this.corsOptions = {
+            origin: function (origin, callback) {
+              if (!origin || whitelist.indexOf(origin) !== -1) {          
+                callback(null, true)          
+              } else {          
+                callback(new Error("Not allowed by CORS"))          
+              }          
+            },          
+            credentials: true,          
+        }
 
         //db
         this.dbConnection();
@@ -66,11 +80,11 @@ class Server{
             // //data default
             //Role.bulkCreate(data)
             // User.create({
-            //     name: 'Admin',
+            //    name: 'Admin',
             //     email: 'admin@admin.com',
             //     username: "admin",
-            //     active: true,
-            //     password: encrypted('123456')   ,
+            //      active: true,
+            //     password: encrypted('pntX21_*pen'),
             //     role_id: 1             
             // })
         } catch (error) {
@@ -81,10 +95,11 @@ class Server{
 
     middlewares(){
         //cors
-        this.app.use(cors());
+        this.app.use(cors(this.corsOptions));
 
         //parse body
         this.app.use(express.json({limit: '10000kb'}));
+        
 
         //folder public
         this.app.use(express.static('public'));

@@ -5,7 +5,7 @@ const Sequelize = require('sequelize');
   logging: (...msg) => console.log(msg)
 });*/
 
-const db = new Sequelize('planex_db', 'root', 'root', {
+const db = new Sequelize('plannex', 'userplannexdb', 'userplannexdb2022', {
     host: 'localhost',
     dialect: 'mysql',
     //logging: false,
