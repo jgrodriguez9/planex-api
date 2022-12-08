@@ -465,7 +465,7 @@ const getSurveyBySection = async (req, res) => {
         id: question.id,
         title: question.title,
         description: question.description,
-        placeholder: question.placeholder,
+        placeholder: question.question_placeholder,
         question_type: question.question_type,
       };
       if (
@@ -473,23 +473,23 @@ const getSurveyBySection = async (req, res) => {
         question.question_type === "multiple_choice"
       ) {
         q.labels =
-          question.suggested_answer_ids.map((it) => ({ id: it.id, label: it.value })) ||
+          question.suggested_answer_ids?.map((it) => ({ id: it.id, value: it.value })) ||
           [];
       }
       sectionMap.get(question.page_id).questions.push(q);
     });
 
     row.questions =
-      bySectionsQs.questions.map((it) => ({
+      bySectionsQs.questions?.map((it) => ({
         id: it.id,
         title: it.title,
         description: it.description,
-        placeholder: it.placeholder,
+        placeholder: it.question_placeholder,
         question_type: it.question_type,
         labels:
           it.question_type === "simple_choice" ||
           it.question_type === "multiple_choice"
-            ? it.suggested_answer_ids.map((it) => ({ id: it.id, value: it.value })) || []
+            ? it.suggested_answer_ids?.map((it) => ({ id: it.id, value: it.value })) || []
             : [],
       })) || [];
     row.sectionsQ = Object.fromEntries(sectionMap.entries());
@@ -500,6 +500,8 @@ const getSurveyBySection = async (req, res) => {
       content: row,
     });
   } catch (error) {
+    console.log('-------------------------------error---------------------')
+    console.log(error)
     return res.status(500).json({
       success: false,
       msg: ERROR500,
