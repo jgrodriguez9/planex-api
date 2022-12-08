@@ -1,4 +1,4 @@
-//const PDFParser  = require("pdf2json/pdfparser");
+const PDFParser  = require("pdf2json/pdfparser");
 const R = require("ramda");
 const { camelCase } = require("lodash");
 
