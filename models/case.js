@@ -312,6 +312,23 @@ const CaseReportTopConfiguration = db.define("CaseReportTopConfiguration", {
     },
 });
 
+const Referral = db.define("Referral", {
+    name: {
+      type: DataTypes.STRING,
+    },
+});
+const ReferralList = db.define("ReferralList", {
+  name: {
+    type: DataTypes.STRING,
+  },
+  address: {
+    type: DataTypes.STRING,
+  },
+  phone:{
+    type: DataTypes.STRING,
+  },
+})
+
 
 Case.hasOne(CaseInfo, { foreignKey: { name: "case_id", allowNull: false } });
 CaseInfo.belongsTo(Case, { foreignKey: "case_id" });
@@ -353,6 +370,12 @@ ReportTopConfiguration.belongsTo(ReportTopConfiguration, {foreignKey: 'report_to
 Case.belongsToMany(ReportTopConfiguration, { through: CaseReportTopConfiguration, foreignKey: 'case_id' });
 ReportTopConfiguration.belongsToMany(Case, { through: CaseReportTopConfiguration, foreignKey: 'report_id' });
 
+Referral.hasMany(ReferralList, {foreignKey: 'referral_id'})
+ReferralList.belongsTo(Referral, {foreignKey: 'referral_id'})
+
+// Case.belongsTo(Referral, {foreignKey: 'referral_id'})
+// Referral.hasMany(Case, {foreignKey: 'referral_id'})
+
 
 
 module.exports = {
@@ -370,5 +393,7 @@ module.exports = {
   SafetyStatus,
   Relationship,
   ReportTopConfiguration,
-  CaseReportTopConfiguration
+  CaseReportTopConfiguration,
+  Referral,
+  ReferralList,
 };
