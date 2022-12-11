@@ -13,6 +13,8 @@ const {
   Stages,
   ReportTopConfiguration,
   CaseReportTopConfiguration,
+  CaseReferralResource,
+  CaseReferralResourceList,
 } = require("../models/case");
 const fs = require("fs");
 const { parse } = require("../helpers/pdfToJson");
@@ -115,6 +117,10 @@ const getCase = async (req, res) => {
             as: 'user_input_line_ids',
             include: {model: SurveyQuestionAnswer}
           }          
+        },
+        {
+          model: CaseReferralResource,
+          include: [CaseReferralResourceList],
         }
       ],
     });
@@ -302,6 +308,9 @@ const putCase = async (req, res) => {
 
     //safety status report
     await addSurveyUserInputByIdCase(body.SurveyUserInputs, id)
+
+    //referral & resources
+    await createUpdateCaseReferralResource(body.CaseReferralResources, id)
 
     return res.status(200).json({
       success: true,
@@ -564,6 +573,37 @@ const getCaseByNumero = async (req, res) => {
     });
   }
 };
+
+
+const createUpdateCaseReferralResource = async (caseReferralResources, caseId) => {
+    try {
+      caseReferralResources.forEach(async (caseReferral) => {
+          let caseReferralId = caseReferral.id ? caseReferral.id :  null;
+          if(!caseReferralId){
+            const newCaseReferral = await CaseReferralResource.create({
+              case_id: caseId,
+              referral_id: caseReferral.referral_id,
+              name: caseReferral.name
+            })
+            caseReferralId = newCaseReferral.id;
+          }
+
+          const caseReferralList = caseReferral.CaseReferralResourceLists
+                                       .filter(it=>!it.id)
+                                       .map(itMap => ({
+                                          case_referral_id: caseReferralId,
+                                          address:  itMap.address,
+                                          name: itMap.name,
+                                          phone: itMap.phone,
+                                          referral_list_id: itMap.referral_list_id,
+                                       }))
+          await CaseReferralResourceList.bulkCreate(caseReferralList)
+      })
+    } catch (error) {
+      //no pasa nadaa error
+      console.log(error)
+    }
+}
 
 module.exports = {
   getCaseList,

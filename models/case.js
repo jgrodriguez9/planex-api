@@ -329,6 +329,29 @@ const ReferralList = db.define("ReferralList", {
   },
 })
 
+const CaseReferralResource = db.define("CaseReferralResource", {
+  referral_id: {
+    type: DataTypes.BIGINT,
+  },
+  name: {
+    type: DataTypes.STRING,
+  }
+})
+const CaseReferralResourceList = db.define("CaseReferralResourceList", {
+  referral_list_id: {
+    type: DataTypes.BIGINT,
+  },
+  name: {
+    type: DataTypes.STRING,
+  },
+  address: {
+    type: DataTypes.STRING,
+  },
+  phone: {
+    type: DataTypes.STRING,
+  }
+})
+
 
 Case.hasOne(CaseInfo, { foreignKey: { name: "case_id", allowNull: false } });
 CaseInfo.belongsTo(Case, { foreignKey: "case_id" });
@@ -373,8 +396,16 @@ ReportTopConfiguration.belongsToMany(Case, { through: CaseReportTopConfiguration
 Referral.hasMany(ReferralList, {foreignKey: 'referral_id'})
 ReferralList.belongsTo(Referral, {foreignKey: 'referral_id'})
 
-// Case.belongsTo(Referral, {foreignKey: 'referral_id'})
-// Referral.hasMany(Case, {foreignKey: 'referral_id'})
+Case.hasMany(CaseReferralResource, {foreignKey: 'case_id'})
+CaseReferralResource.belongsTo(Case, {foreignKey: 'case_id'})
+
+CaseReferralResource.hasMany(CaseReferralResourceList, 
+  {
+    foreignKey: 'case_referral_id',
+    onDelete: 'CASCADE'
+  }
+)
+CaseReferralResourceList.belongsTo(CaseReferralResource, {foreignKey: 'case_referral_id'})
 
 
 
@@ -396,4 +427,6 @@ module.exports = {
   CaseReportTopConfiguration,
   Referral,
   ReferralList,
+  CaseReferralResource,
+  CaseReferralResourceList
 };

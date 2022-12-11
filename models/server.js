@@ -19,6 +19,7 @@ const roleRoutes = require('../routes/role');
 const survey = require('../routes/survey')
 const surveyUserInput = require("../routes/surveyUserInput");
 const referralRoutes = require('../routes/referral')
+const caseReferralResourceRoutes = require('../routes/casereferral')
 //const Role = require('./role');
 //const User = require('./user');
 //const { encrypted } = require("../common/util");
@@ -47,6 +48,7 @@ class Server{
             survey: "/api/survey",
             surveyUserInput: "/api/survey/userinput",
             referral: "/api/referral",
+            casereferralresource: "/api/casereferralresource",
         };
         const whitelist = process.env.NODE_ENV === 'production' ? ["https://penuel.plan-nex.com"] : ["http://localhost:3000"]
         this.corsOptions = {
@@ -124,6 +126,7 @@ class Server{
         this.app.use(this.apiPath.survey, survey);
         this.app.use(this.apiPath.surveyUserInput, surveyUserInput);
         this.app.use(this.apiPath.referral, referralRoutes);
+        this.app.use(this.apiPath.casereferralresource, caseReferralResourceRoutes);
     }
 
     listen(){
