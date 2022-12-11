@@ -312,6 +312,46 @@ const CaseReportTopConfiguration = db.define("CaseReportTopConfiguration", {
     },
 });
 
+const Referral = db.define("Referral", {
+    name: {
+      type: DataTypes.STRING,
+    },
+});
+const ReferralList = db.define("ReferralList", {
+  name: {
+    type: DataTypes.STRING,
+  },
+  address: {
+    type: DataTypes.STRING,
+  },
+  phone:{
+    type: DataTypes.STRING,
+  },
+})
+
+const CaseReferralResource = db.define("CaseReferralResource", {
+  referral_id: {
+    type: DataTypes.BIGINT,
+  },
+  name: {
+    type: DataTypes.STRING,
+  }
+})
+const CaseReferralResourceList = db.define("CaseReferralResourceList", {
+  referral_list_id: {
+    type: DataTypes.BIGINT,
+  },
+  name: {
+    type: DataTypes.STRING,
+  },
+  address: {
+    type: DataTypes.STRING,
+  },
+  phone: {
+    type: DataTypes.STRING,
+  }
+})
+
 
 Case.hasOne(CaseInfo, { foreignKey: { name: "case_id", allowNull: false } });
 CaseInfo.belongsTo(Case, { foreignKey: "case_id" });
@@ -353,6 +393,20 @@ ReportTopConfiguration.belongsTo(ReportTopConfiguration, {foreignKey: 'report_to
 Case.belongsToMany(ReportTopConfiguration, { through: CaseReportTopConfiguration, foreignKey: 'case_id' });
 ReportTopConfiguration.belongsToMany(Case, { through: CaseReportTopConfiguration, foreignKey: 'report_id' });
 
+Referral.hasMany(ReferralList, {foreignKey: 'referral_id'})
+ReferralList.belongsTo(Referral, {foreignKey: 'referral_id'})
+
+Case.hasMany(CaseReferralResource, {foreignKey: 'case_id'})
+CaseReferralResource.belongsTo(Case, {foreignKey: 'case_id'})
+
+CaseReferralResource.hasMany(CaseReferralResourceList, 
+  {
+    foreignKey: 'case_referral_id',
+    onDelete: 'CASCADE'
+  }
+)
+CaseReferralResourceList.belongsTo(CaseReferralResource, {foreignKey: 'case_referral_id'})
+
 
 
 module.exports = {
@@ -370,5 +424,9 @@ module.exports = {
   SafetyStatus,
   Relationship,
   ReportTopConfiguration,
-  CaseReportTopConfiguration
+  CaseReportTopConfiguration,
+  Referral,
+  ReferralList,
+  CaseReferralResource,
+  CaseReferralResourceList
 };
