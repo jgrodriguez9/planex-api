@@ -32,7 +32,7 @@ const QuestionInstructionSubsection = db.define("QuestionInstructionSubsection",
 
 const QuestionInstructionSubsectionList = db.define("QuestionInstructionSubsectionList", {
     description: {
-        type: DataTypes.STRING
+        type: DataTypes.TEXT
     },
     adorment: {
         type: DataTypes.STRING,
@@ -47,13 +47,13 @@ const QuestionInstructionSubsectionList = db.define("QuestionInstructionSubsecti
     }
 });
 
-QuestionInstruction.hasMany(QuestionInstructionSection, { foreignKey: { name: "question_instruction_id", allowNull: false }, onDelete: 'CASCADE'});
+QuestionInstruction.hasMany(QuestionInstructionSection, { foreignKey: { name: "question_instruction_id", allowNull: false }, onDelete: 'CASCADE', onUpdate: 'CASCADE'});
 QuestionInstructionSection.belongsTo(QuestionInstruction, { foreignKey: "question_instruction_id" });
 
-QuestionInstructionSection.hasMany(QuestionInstructionSubsection, { foreignKey: { name: "question_section_id", allowNull: false }, onDelete: 'CASCADE'});
+QuestionInstructionSection.hasMany(QuestionInstructionSubsection, { foreignKey: { name: "question_section_id", allowNull: false }, onDelete: 'CASCADE', onUpdate: 'CASCADE'});
 QuestionInstructionSubsection.belongsTo(QuestionInstructionSection, { foreignKey: "question_section_id" });
 
-QuestionInstructionSubsection.hasMany(QuestionInstructionSubsectionList, { foreignKey: { name: "question_subsection_id", allowNull: false }, onDelete: 'CASCADE'});
+QuestionInstructionSubsection.hasMany(QuestionInstructionSubsectionList, { foreignKey: { name: "question_subsection_id", allowNull: false }, onDelete: 'CASCADE', onUpdate: 'CASCADE'});
 QuestionInstructionSubsectionList.belongsTo(QuestionInstructionSubsection, { foreignKey: "question_subsection_id" });
 
 

@@ -80,8 +80,8 @@ class Server{
             console.log('database connection success')
             
             //sync
-            await db.sync({ alter: true }) 
-            console.log('database online sync')
+            //await db.sync({ alter: true }) 
+            //console.log('database online sync')
 
             // //data default
             //Role.bulkCreate(data)
