@@ -11,8 +11,6 @@ const {
   PRSOnly,
   SponsorInfo,
   Stages,
-  ReportTopConfiguration,
-  CaseReportTopConfiguration,
   CaseReferralResource,
   CaseReferralResourceList,
 } = require("../models/case");
@@ -20,6 +18,7 @@ const fs = require("fs");
 const { parse } = require("../helpers/pdfToJson");
 const { SurveyUserInput, SurveyQuestionAnswer, SurveyUserInputLine } = require("../models/survey");
 const { addSurveyUserInputByIdCase } = require("./surveyUserInput");
+const { DataReport } = require("../models/dataReport");
 
 const upload = multer({
   fileFilter: (req, file, cb) => {
@@ -109,7 +108,6 @@ const getCase = async (req, res) => {
         Stages,
         PRSAfter,
         PRSOnly,
-        ReportTopConfiguration,
         {
           model: SurveyUserInput,
           include:{
@@ -121,6 +119,10 @@ const getCase = async (req, res) => {
         {
           model: CaseReferralResource,
           include: [CaseReferralResourceList],
+        },
+        {
+          model: DataReport,
+          attributes: ["id", "name", "section"]
         }
       ],
     });
@@ -286,25 +288,6 @@ const putCase = async (req, res) => {
       prsAfter.case_id = id;
       await PRSAfter.create(prsAfter);
     }
-
-    //report top configuraton
-    const newHeaderReport = body.ReportTopConfigurations
-      .filter((item) => !item.id)
-      .map((it) => ({ 
-          report_id: it.CaseReportTopConfiguration.report_id,
-          case_id: id,
-          checked: it.CaseReportTopConfiguration.checked
-        }));
-    await CaseReportTopConfiguration.bulkCreate(newHeaderReport);
-    body.ReportTopConfigurations.forEach(async (elem) => {
-      if (elem.id) {
-        const headerReport = await CaseReportTopConfiguration.findByPk(elem.CaseReportTopConfiguration.id);
-        headerReport?.set({
-          checked: elem.CaseReportTopConfiguration.checked
-        });
-        await headerReport?.save();
-      }
-    });
 
     //safety status report
     await addSurveyUserInputByIdCase(body.SurveyUserInputs, id)

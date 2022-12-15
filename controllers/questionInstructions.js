@@ -1,4 +1,5 @@
 const { ERROR500 } = require("../constant/errors");
+const { Sections } = require("../models/dataReport");
 const { QuestionInstruction, QuestionInstructionSubsection, QuestionInstructionSubsectionList, QuestionInstructionSection } = require("../models/questionInstructions");
 
 
@@ -41,15 +42,63 @@ const getQuestionInstructions = async (req, res) =>{
     try {
         //checamos si existe el usuario
         const item = await QuestionInstruction.findByPk(id, {
-            include: {
-                model: QuestionInstructionSection,
-                include: {
-                    model: QuestionInstructionSubsection,
+            include: [
+                Sections, 
+                {
+                    model: QuestionInstructionSection,
                     include: {
-                        model: QuestionInstructionSubsectionList
+                        model: QuestionInstructionSubsection,
+                        include: {
+                            model: QuestionInstructionSubsectionList
+                        }
                     }
                 }
-            }
+            ]
+        });
+        if(!item){
+            return res.status(404).json({
+                success: false,
+                msg: "No se encuentra el usuario con id "+id
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            msg: 'success',
+            content: item
+        })
+        
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success: false,
+            msg: ERROR500,
+            errors: error.errors
+        })
+    }
+    
+}
+
+const getQuestionInstructionsBySection = async (req, res) =>{
+
+    const { id } = req.params;
+
+    try {
+        //checamos si existe el usuario
+        const item = await QuestionInstruction.findOne({
+            where: {section_id: id},
+            include: [
+                Sections, 
+                {
+                    model: QuestionInstructionSection,
+                    include: {
+                        model: QuestionInstructionSubsection,
+                        include: {
+                            model: QuestionInstructionSubsectionList
+                        }
+                    }
+                }
+            ]
         });
         if(!item){
             return res.status(404).json({
@@ -78,7 +127,10 @@ const getQuestionInstructions = async (req, res) =>{
 const postQuestionInstructions = async (req, res) => {
     const { body } = req
     try {
-        const questionInstructions = await QuestionInstruction.create({name: body.name})
+        const questionInstructions = await QuestionInstruction.create({
+            name: body.name,
+            section_id: body.section_id
+        })
 
         body.QuestionInstructionSections.forEach(async (elemQISection) => {
             const qi_section_id = await QuestionInstructionSection.create({name: elemQISection.name, question_instruction_id: questionInstructions.id})
@@ -113,7 +165,6 @@ const putQuestionInstructions = async (req, res) => {
                 msg: "Not founded "+id
             })
         }
-        console.log(JSON.stringify(body))
         await questionInstructionToUpdate.update({name: body.name})
         body.QuestionInstructionSections.forEach(async (elemQISection) => {
             let qi_section = null
@@ -197,5 +248,6 @@ module.exports = {
     getQuestionInstructionsList,
     getQuestionInstructions,
     postQuestionInstructions,
-    putQuestionInstructions
+    putQuestionInstructions,
+    getQuestionInstructionsBySection
 }

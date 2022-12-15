@@ -299,19 +299,6 @@ const ReportTopConfiguration = db.define('ReportTopConfiguration', {
     },
 })
 
-const CaseReportTopConfiguration = db.define("CaseReportTopConfiguration", {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-      allowNull: false,
-    },
-    checked: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
-    },
-});
-
 const Referral = db.define("Referral", {
     name: {
       type: DataTypes.STRING,
@@ -390,9 +377,6 @@ HouseHoldMembers.belongsTo(Relationship, {foreignKey: 'relationship_id'})
 ReportTopConfiguration.hasMany(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
 ReportTopConfiguration.belongsTo(ReportTopConfiguration, {foreignKey: 'report_top_configuration_id'})
 
-Case.belongsToMany(ReportTopConfiguration, { through: CaseReportTopConfiguration, foreignKey: 'case_id' });
-ReportTopConfiguration.belongsToMany(Case, { through: CaseReportTopConfiguration, foreignKey: 'report_id' });
-
 Referral.hasMany(ReferralList, {foreignKey: 'referral_id'})
 ReferralList.belongsTo(Referral, {foreignKey: 'referral_id'})
 
@@ -424,7 +408,6 @@ module.exports = {
   SafetyStatus,
   Relationship,
   ReportTopConfiguration,
-  CaseReportTopConfiguration,
   Referral,
   ReferralList,
   CaseReferralResource,

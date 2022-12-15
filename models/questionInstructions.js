@@ -57,8 +57,6 @@ QuestionInstructionSubsection.hasMany(QuestionInstructionSubsectionList, { forei
 QuestionInstructionSubsectionList.belongsTo(QuestionInstructionSubsection, { foreignKey: "question_subsection_id" });
 
 
-
-
 module.exports = {
     QuestionInstruction,
     QuestionInstructionSection,
