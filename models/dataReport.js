@@ -21,7 +21,11 @@ const Sections = db.define("Sections", {
         validate: {
             isIn: [
               [
-                "destination_indicator_question"
+                "destination_indicator_question",
+                "header",
+                "safety_status",
+                "case_closure_program_outcomes_indicators",
+                "referrals_resource"
               ],
             ],
         },

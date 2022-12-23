@@ -96,8 +96,7 @@ class Server{
             //     role_id: 1             
             // })
         } catch (error) {
-            throw new Error(error)
-            
+            throw new Error(error)            
         }
     }
 
@@ -106,8 +105,7 @@ class Server{
         this.app.use(cors(this.corsOptions));
 
         //parse body
-        this.app.use(express.json({limit: '10000kb'}));
-        
+        this.app.use(express.json({limit: '10000kb'}));        
 
         //folder public
         this.app.use(express.static('public'));
