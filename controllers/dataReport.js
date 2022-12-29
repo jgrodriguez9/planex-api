@@ -4,7 +4,6 @@ const { DataReport, Sections } = require("../models/dataReport");
 const getDataReport = async (req, res) =>{
     const { id } = req.params;
     try {
-        //checamos si existe el usuario
         const item = await DataReport.findByPk(id, {
             attributes: ["id", "name"],
         });
@@ -60,8 +59,30 @@ const getSections = async (req, res) => {
     })
 }
 
+const getDataReportBySection = async (req, res) => {
+    const { section } = req.params;
+    try {
+        const item = await DataReport.findOne({
+            where: {section: section},
+        });
+        return res.status(200).json({
+            success: true,
+            msg: 'success',
+            content: item
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            msg: ERROR500,
+            errors: error.errors
+        })
+    }
+    
+}
+
 module.exports = {
     getDataReport,
     postDataReport,
-    getSections
+    getSections,
+    getDataReportBySection
 }
