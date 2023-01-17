@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const moment = require("moment");
 const multer = require("multer");
+const R = require("ramda");
 const { ERROR500 } = require("../constant/errors");
 const {
   Case,
@@ -13,12 +14,16 @@ const {
   Stages,
   CaseReferralResource,
   CaseReferralResourceList,
+  ReportTopConfiguration,
+  Referral,
+  ReferralList,
 } = require("../models/case");
 const fs = require("fs");
 const { parse } = require("../helpers/pdfToJson");
-const { SurveyUserInput, SurveyQuestionAnswer, SurveyUserInputLine } = require("../models/survey");
+const { SurveyUserInput, SurveyQuestionAnswer, SurveyUserInputLine, Survey, SurveyQuestion } = require("../models/survey");
 const { addSurveyUserInputByIdCase } = require("./surveyUserInput");
-const { DataReport } = require("../models/dataReport");
+const { DataReport, Sections } = require("../models/dataReport");
+const { QuestionInstruction, QuestionInstructionSection, QuestionInstructionSubsection, QuestionInstructionSubsectionList } = require("../models/questionInstructions");
 
 const upload = multer({
   fileFilter: (req, file, cb) => {
@@ -105,7 +110,6 @@ const getCase = async (req, res) => {
           include: [ContactNumbers],
         },
         HouseHoldMembers,
-        Stages,
         PRSAfter,
         PRSOnly,
         {
@@ -132,11 +136,69 @@ const getCase = async (req, res) => {
         msg: "No se encuentra el case con id " + id,
       });
     }
+    const caseDB = await caseObj.get();
+    const headerTopActive = await ReportTopConfiguration.findAll({
+      where: {
+          show: true
+      }
+    });
+    const objheader = {
+      id: null,
+      data: {
+        prs_case_type: headerTopActive.filter(it=>it.type==='prs_case_type'),
+        prs_visit_type: headerTopActive.filter(it=>it.type==='prs_visit_type'),
+        prs_level: headerTopActive.filter(it=>it.type==='prs_level'),
+        case_closing_summary: headerTopActive.filter(it=>it.type==='case_closing_summary')
+      }
+      
+    }
+    const safetyStatus  = await getSurveyBySection('safety_status')
+    const safetyStatusObj = {
+      id:null,
+      data: safetyStatus
+    }
+
+    const referralResource = await Referral.findAll({
+      include: [ReferralList]
+    });
+    const referralResourceObj = {
+      id:null,
+      data: referralResource
+    }
+
+    const caseCloseProgram  = await getSurveyBySection('case_closure_program_outcomes_indicators')
+    const caseCloseProgramObj = {
+      id:null,
+      data: caseCloseProgram
+    }
+
+    const destinationIndicators = await getQuestionInstructionsBySectionName('destination_indicator_question');
+    const destinationIndicatorsObj = {
+      id: null,
+      data: destinationIndicators
+    }
+
+    const serviceIndicators = await getQuestionInstructionsBySectionName('service_areas_supplemental_instructions');
+    const serviceIndicatorsObj = {
+      id: null,
+      data: serviceIndicators
+    }
+
+
+    const myCase = {
+      ...caseDB,
+      Header: objheader,
+      SafetyStatus: safetyStatusObj,
+      ReferralResource: referralResourceObj,
+      CaseCloseProgram: caseCloseProgramObj,
+      DestinationIndicator: destinationIndicatorsObj,
+      ServiceInstructions: serviceIndicatorsObj
+    }
 
     return res.status(200).json({
       success: true,
       msg: "success",
-      content: caseObj,
+      content: myCase,
     });
   } catch (error) {
     console.log(error)
@@ -586,6 +648,122 @@ const createUpdateCaseReferralResource = async (caseReferralResources, caseId) =
       //no pasa nadaa error
       console.log(error)
     }
+}
+
+const getSurveyBySection = async (section) => {
+  try {
+    const survey = await Survey.findOne({
+      where: { section: section },
+      include: [
+        {
+          model: SurveyQuestion,
+          where: { delete: false},
+          include: [
+            { model: SurveyQuestionAnswer, as: "suggested_answer_ids" },
+          ],
+        },
+      ],
+    });
+    if (!survey) {
+      return null;
+    }
+
+    const row = {
+      id: survey.id,
+      title: survey.title,
+      active: survey.active,
+      section: survey.section,
+      sectionsQ: [],
+      questions: [],
+    };
+
+    const bySectionsQs = R.groupBy((question) => {
+      return question.is_page
+        ? "sections"
+        : question.page_id
+        ? "sectionQ"
+        : "questions";
+    }, survey.SurveyQuestions);
+
+    const sectionMap = new Map();
+    bySectionsQs.sections?.forEach((section) => {
+      sectionMap.set(section.id, {
+        id: section.id,
+        title: section.title,
+        questions: [],
+      });
+    });
+
+    bySectionsQs.sectionQ?.forEach((question) => {
+      const q = {
+        id: question.id,
+        title: question.title,
+        description: question.description,
+        placeholder: question.question_placeholder,
+        question_type: question.question_type,
+      };
+      if (
+        question.question_type === "simple_choice" ||
+        question.question_type === "multiple_choice"
+      ) {
+        q.labels =
+          question.suggested_answer_ids?.map((it) => ({ id: it.id, value: it.value })) ||
+          [];
+      }
+      sectionMap.get(question.page_id).questions.push(q);
+    });
+
+    row.questions =
+      bySectionsQs.questions?.map((it) => ({
+        id: it.id,
+        title: it.title,
+        description: it.description,
+        placeholder: it.question_placeholder,
+        question_type: it.question_type,
+        labels:
+          it.question_type === "simple_choice" ||
+          it.question_type === "multiple_choice"
+            ? it.suggested_answer_ids?.map((it) => ({ id: it.id, value: it.value })) || []
+            : [],
+      })) || [];
+    row.sectionsQ = Object.fromEntries(sectionMap.entries());
+
+    return row;
+  } catch (error) {
+    console.log('-------------------------------error---------------------')
+    console.log(error)
+    return null;
+  }
+}
+
+const getQuestionInstructionsBySectionName = async (sectionName) =>{
+
+  try {
+      const item = await QuestionInstruction.findOne({
+          where: {sectionName: sectionName},
+          include: [
+              {
+                  model: QuestionInstructionSection,
+                  include: {
+                      model: QuestionInstructionSubsection,
+                      include: {
+                          model: QuestionInstructionSubsectionList
+                      }
+                  }
+              }
+          ]
+      });
+      if(!item){
+          return null
+      }
+
+      return item
+      
+  } catch (error) {
+      console.log(error)
+      return null
+  }
+  
 }
 
 module.exports = {

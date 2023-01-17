@@ -54,7 +54,7 @@ class Server{
             questionInstructions: "/api/questioninstructions",
             datareport: "/api/datareport",
         };
-        const whitelist = process.env.NODE_ENV === 'production' ? ["https://penuel.plan-nex.com"] : ["http://localhost:3000"]
+        const whitelist = process.env.NODE_ENV === 'production' ? ["https://penuel.plan-nex.com"] : ["http://localhost:3000", "http://localhost:3001"]
         this.corsOptions = {
             origin: function (origin, callback) {
               if (!origin || whitelist.indexOf(origin) !== -1) {          

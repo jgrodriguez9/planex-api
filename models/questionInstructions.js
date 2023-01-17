@@ -5,11 +5,14 @@ const QuestionInstruction = db.define("QuestionInstruction", {
     name: {
         type: DataTypes.STRING
     },
+    sectionName:{
+        type: DataTypes.STRING
+    }
 });
 
 const QuestionInstructionSection = db.define("QuestionInstructionSection", {
     name: {
-        type: DataTypes.STRING
+        type: DataTypes.TEXT
     },
 });
 

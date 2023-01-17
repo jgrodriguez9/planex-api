@@ -124,12 +124,57 @@ const getQuestionInstructionsBySection = async (req, res) =>{
     
 }
 
+const getQuestionInstructionsBySectionName = async (req, res) =>{
+
+    const { id } = req.params;
+
+    try {
+        const item = await QuestionInstruction.findOne({
+            where: {sectionName: id},
+            include: [
+                Sections, 
+                {
+                    model: QuestionInstructionSection,
+                    include: {
+                        model: QuestionInstructionSubsection,
+                        include: {
+                            model: QuestionInstructionSubsectionList
+                        }
+                    }
+                }
+            ]
+        });
+        if(!item){
+            return res.status(404).json({
+                success: false,
+                msg: "No se encuentra el usuario con id "+id
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            msg: 'success',
+            content: item
+        })
+        
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success: false,
+            msg: ERROR500,
+            errors: error.errors
+        })
+    }
+    
+}
+
 const postQuestionInstructions = async (req, res) => {
     const { body } = req
     try {
         const questionInstructions = await QuestionInstruction.create({
             name: body.name,
-            section_id: body.section_id
+            section_id: body.section_id,
+            sectionName: body.sectionName
         })
 
         body.QuestionInstructionSections.forEach(async (elemQISection) => {
@@ -249,5 +294,6 @@ module.exports = {
     getQuestionInstructions,
     postQuestionInstructions,
     putQuestionInstructions,
-    getQuestionInstructionsBySection
+    getQuestionInstructionsBySection,
+    getQuestionInstructionsBySectionName
 }
