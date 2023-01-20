@@ -120,14 +120,6 @@ const getCase = async (req, res) => {
             include: {model: SurveyQuestionAnswer}
           }          
         },
-        {
-          model: CaseReferralResource,
-          include: [CaseReferralResourceList],
-        },
-        {
-          model: DataReport,
-          attributes: ["id", "name", "section"]
-        }
       ],
     });
     if (!caseObj) {
@@ -137,53 +129,150 @@ const getCase = async (req, res) => {
       });
     }
     const caseDB = await caseObj.get();
-    const headerTopActive = await ReportTopConfiguration.findAll({
+
+    //checamos si ya tenemos unheader
+    let objheader = null;
+    const existHeader = await DataReport.findOne({
       where: {
-          show: true
+        section: 'header',
+        case_id: id
       }
     });
-    const objheader = {
-      id: null,
-      data: {
-        prs_case_type: headerTopActive.filter(it=>it.type==='prs_case_type'),
-        prs_visit_type: headerTopActive.filter(it=>it.type==='prs_visit_type'),
-        prs_level: headerTopActive.filter(it=>it.type==='prs_level'),
-        case_closing_summary: headerTopActive.filter(it=>it.type==='case_closing_summary')
+    if(existHeader){
+      objheader = {
+        id: existHeader.id,
+        data: JSON.parse(existHeader.description),
       }
-      
+    }else{
+      const headerTopActive = await ReportTopConfiguration.findAll({
+        where: {
+            show: true
+        }
+      });
+      objheader = {
+        id: null,
+        data: {
+          prs_case_type: headerTopActive.filter(it=>it.type==='prs_case_type'),
+          prs_visit_type: headerTopActive.filter(it=>it.type==='prs_visit_type'),
+          prs_level: headerTopActive.filter(it=>it.type==='prs_level'),
+          case_closing_summary: headerTopActive.filter(it=>it.type==='case_closing_summary')
+        }      
+      }
     }
-    const safetyStatus  = await getSurveyBySection('safety_status')
-    const safetyStatusObj = {
-      id:null,
-      data: safetyStatus
-    }
-
-    const referralResource = await Referral.findAll({
-      include: [ReferralList]
+    //end checamos si ya tenemos unheader
+    
+    //Safety status
+    let safetyStatusObj = null;
+    const existSStatus = await DataReport.findOne({
+      where: {
+        section: 'safety_status',
+        case_id: id
+      }
     });
-    const referralResourceObj = {
-      id:null,
-      data: referralResource
+    if(existSStatus){
+      safetyStatusObj = {
+        id:existSStatus.id,
+        data: JSON.parse(existSStatus.description)
+      }
+    }else{
+      const safetyStatus  = await getSurveyBySection('safety_status')
+      safetyStatusObj = {
+        id:null,
+        data: safetyStatus
+      }
     }
-
-    const caseCloseProgram  = await getSurveyBySection('case_closure_program_outcomes_indicators')
-    const caseCloseProgramObj = {
-      id:null,
-      data: caseCloseProgram
+    //end safety status
+    
+    //referrals &resources
+    let referralResourceObj = null;
+    const existReferralResources = await DataReport.findOne({
+      where: {
+        section: 'referrals_resource',
+        case_id: id
+      }
+    });
+    if(existReferralResources){
+      referralResourceObj = {
+        id:existReferralResources.id,
+        data: JSON.parse(existReferralResources.description)
+      }
+    }else{
+      const referralResource = await Referral.findAll({
+        include: [ReferralList]
+      });
+      referralResourceObj = {
+        id:null,
+        data: referralResource
+      }
     }
-
-    const destinationIndicators = await getQuestionInstructionsBySectionName('destination_indicator_question');
-    const destinationIndicatorsObj = {
-      id: null,
-      data: destinationIndicators
+    //end referrals &resources
+    
+    //case close program
+    let caseCloseProgramObj = null;
+    const existCaseCloseP = await DataReport.findOne({
+      where: {
+        section: 'case_closure_program_outcomes_indicators',
+        case_id: id
+      }
+    });
+    if(existCaseCloseP){
+      caseCloseProgramObj = {
+        id:existCaseCloseP.id,
+        data: JSON.parse(existCaseCloseP.description)
+      }
+    }else{
+      const caseCloseProgram  = await getSurveyBySection('case_closure_program_outcomes_indicators')
+      caseCloseProgramObj = {
+        id:null,
+        data: caseCloseProgram
+      }
     }
+    //end case close program
 
-    const serviceIndicators = await getQuestionInstructionsBySectionName('service_areas_supplemental_instructions');
-    const serviceIndicatorsObj = {
-      id: null,
-      data: serviceIndicators
+    //destinationIndicators
+    let destinationIndicatorsObj = null;
+    const existDestinationIndicators = await DataReport.findOne({
+      where: {
+        section: 'destination_indicator_question',
+        case_id: id
+      }
+    });
+    if(existDestinationIndicators){
+      destinationIndicatorsObj = {
+        id: existDestinationIndicators.id,
+        data: JSON.parse(existDestinationIndicators.description)
+      }
+    }else{
+      const destinationIndicators = await getQuestionInstructionsBySectionName('destination_indicator_question');
+      destinationIndicatorsObj = {
+        id: null,
+        data: destinationIndicators
+      }
     }
+    //end destinationIndicators
+    
 
+    //service Instructions
+    let serviceIndicatorsObj = null;
+    const existServiceInstrctions = await DataReport.findOne({
+      where: {
+        section: 'service_areas_supplemental_instructions',
+        case_id: id
+      }
+    });
+    if(existServiceInstrctions){
+      serviceIndicatorsObj = {
+        id: existServiceInstrctions.id,
+        data: JSON.parse(existServiceInstrctions.description)
+      }
+    }else{
+      const serviceIndicators = await getQuestionInstructionsBySectionName('service_areas_supplemental_instructions');
+      serviceIndicatorsObj = {
+        id: null,
+        data: serviceIndicators
+      }
+    }
+    //end service Indicators
 
     const myCase = {
       ...caseDB,
@@ -202,6 +291,75 @@ const getCase = async (req, res) => {
     });
   } catch (error) {
     console.log(error)
+    return res.status(500).json({
+      success: false,
+      msg: ERROR500,
+      errors: error,
+    });
+  }
+};
+
+const getCleanCase = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const headerTopActive = await ReportTopConfiguration.findAll({
+      where: {
+          show: true
+      }
+    });
+    const objheader = {
+      id: null,
+      data: {
+        prs_case_type: headerTopActive.filter(it=>it.type==='prs_case_type'),
+        prs_visit_type: headerTopActive.filter(it=>it.type==='prs_visit_type'),
+        prs_level: headerTopActive.filter(it=>it.type==='prs_level'),
+        case_closing_summary: headerTopActive.filter(it=>it.type==='case_closing_summary')
+      }      
+    }
+    const safetyStatus  = await getSurveyBySection('safety_status')
+    const safetyStatusObj = {
+      id:null,
+      data: safetyStatus
+    }
+    const referralResource = await Referral.findAll({
+      include: [ReferralList]
+    });
+    const referralResourceObj = {
+      id:null,
+      data: referralResource
+    }
+    const caseCloseProgram  = await getSurveyBySection('case_closure_program_outcomes_indicators')
+    const caseCloseProgramObj = {
+      id:null,
+      data: caseCloseProgram
+    }
+    const destinationIndicators = await getQuestionInstructionsBySectionName('destination_indicator_question');
+    const destinationIndicatorsObj = {
+      id: null,
+      data: destinationIndicators
+    }
+    const serviceIndicators = await getQuestionInstructionsBySectionName('service_areas_supplemental_instructions');
+    const serviceIndicatorsObj = {
+      id: null,
+      data: serviceIndicators
+    }
+
+    const myCase = {
+      Header: objheader,
+      SafetyStatus: safetyStatusObj,
+      ReferralResource: referralResourceObj,
+      CaseCloseProgram: caseCloseProgramObj,
+      DestinationIndicator: destinationIndicatorsObj,
+      ServiceInstructions: serviceIndicatorsObj
+    }
+
+    return res.status(200).json({
+      success: true,
+      msg: "success",
+      content: myCase,
+    });
+  } catch (error) {
     return res.status(500).json({
       success: false,
       msg: ERROR500,
@@ -245,7 +403,35 @@ const postCase = async (req, res) =>{
     }));
     await HouseHoldMembers.bulkCreate(houseHoldMembers);
 
-    console.log(body)
+    //prsOnly and prsafter
+    const { reasonReferral: { prsOnly, prsAfter } } = body;
+    await PRSOnly.bulkCreate(prsOnly);
+    await PRSAfter.bulkCreate(prsAfter);
+
+    //update Header
+    const { Header } = body;
+    await createOrUpdateSection(Header, 'header', caseId)
+    //end update Header
+
+    //safety status report
+    const { SafetyStatus } = body;
+    await createOrUpdateSection(SafetyStatus, 'safety_status', caseId)
+
+    //referral & resources
+    const { ReferralResource } = body;
+    await createOrUpdateSection(ReferralResource, 'referrals_resource', caseId)
+
+    //case close program
+    const { CaseCloseProgram } = body;
+    await createOrUpdateSection(CaseCloseProgram, 'case_closure_program_outcomes_indicators', caseId)
+
+    //destination of indicator
+    const { DestinationIndicator } = body;
+    await createOrUpdateSection(DestinationIndicator, 'destination_indicator_question', caseId)
+
+    //destination of indicator
+    const { ServiceInstructions } = body;
+    await createOrUpdateSection(ServiceInstructions, 'service_areas_supplemental_instructions', caseId)
 
     //newCase.createCaseInfo()
     return res.status(200).json({
@@ -351,11 +537,30 @@ const putCase = async (req, res) => {
       await PRSAfter.create(prsAfter);
     }
 
+    //update Header
+    const { Header } = body;
+    await createOrUpdateSection(Header, 'header', caseToUpdate.id)
+    //end update Header
+
     //safety status report
-    await addSurveyUserInputByIdCase(body.SurveyUserInputs, id)
+    const { SafetyStatus } = body;
+    await createOrUpdateSection(SafetyStatus, 'safety_status', caseToUpdate.id)
 
     //referral & resources
-    await createUpdateCaseReferralResource(body.CaseReferralResources, id)
+    const { ReferralResource } = body;
+    await createOrUpdateSection(ReferralResource, 'referrals_resource', caseToUpdate.id)
+
+    //case close program
+    const { CaseCloseProgram } = body;
+    await createOrUpdateSection(CaseCloseProgram, 'case_closure_program_outcomes_indicators', caseToUpdate.id)
+
+    //destination of indicator
+    const { DestinationIndicator } = body;
+    await createOrUpdateSection(DestinationIndicator, 'destination_indicator_question', caseToUpdate.id)
+
+    //destination of indicator
+    const { ServiceInstructions } = body;
+    await createOrUpdateSection(ServiceInstructions, 'service_areas_supplemental_instructions', caseToUpdate.id)
 
     return res.status(200).json({
       success: true,
@@ -619,7 +824,6 @@ const getCaseByNumero = async (req, res) => {
   }
 };
 
-
 const createUpdateCaseReferralResource = async (caseReferralResources, caseId) => {
     try {
       caseReferralResources.forEach(async (caseReferral) => {
@@ -766,6 +970,32 @@ const getQuestionInstructionsBySectionName = async (sectionName) =>{
   
 }
 
+const createOrUpdateSection = async (data, section, caseId) => {
+  try {
+    if(!data.id){
+      const obj = {
+        name: section,
+        description: JSON.stringify(data.data),
+        section: section,
+        case_id: caseId
+      }
+
+      const item = await DataReport.create(obj)
+      return item;
+    }else{
+      const itemToUpdate = await DataReport.findByPk(data.id);
+      itemToUpdate?.set({
+        description: JSON.stringify(data.data)
+      });
+      await itemToUpdate?.save();
+      return item;
+    }
+  } catch (error) {
+    return null;
+  }
+  
+}
+
 module.exports = {
   getCaseList,
   getCase,
@@ -775,4 +1005,5 @@ module.exports = {
   getCaseAndStatus,
   postUploadFile,
   getCaseByNumero,
+  getCleanCase,
 };

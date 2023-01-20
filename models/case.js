@@ -238,40 +238,6 @@ const PRSAfter = db.define("PRSAfter", {
   },
 });
 
-const SafetyStatusAttribute = db.define("SafetyStatusAttribute", {
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  description: {
-    type: DataTypes.STRING,
-    defaultValue: null,
-  },
-  type: {
-    type: DataTypes.STRING,
-    defaultValue: "BOOLEAN",
-    validate:{
-      isOne:["BOOLEAN", "STRING"]
-    },
-    active:{
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    }
-  },
-});
-
-const SafetyStatus = db.define("SafetyStatus", {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-    allowNull: false,
-  },
-  value: {
-    type: DataTypes.STRING,
-  },
-});
-
 const Relationship = db.define('Relationship', {
     name: {
       type: DataTypes.STRING
@@ -316,28 +282,7 @@ const ReferralList = db.define("ReferralList", {
   },
 })
 
-const CaseReferralResource = db.define("CaseReferralResource", {
-  referral_id: {
-    type: DataTypes.BIGINT,
-  },
-  name: {
-    type: DataTypes.STRING,
-  }
-})
-const CaseReferralResourceList = db.define("CaseReferralResourceList", {
-  referral_list_id: {
-    type: DataTypes.BIGINT,
-  },
-  name: {
-    type: DataTypes.STRING,
-  },
-  address: {
-    type: DataTypes.STRING,
-  },
-  phone: {
-    type: DataTypes.STRING,
-  }
-})
+
 
 
 Case.hasOne(CaseInfo, { foreignKey: { name: "case_id", allowNull: false } });
@@ -368,9 +313,6 @@ PRSOnly.belongsTo(Case, { foreignKey: "case_id" });
 Case.hasOne(PRSAfter, { foreignKey: "case_id" });
 PRSAfter.belongsTo(Case, { foreignKey: "case_id" });
 
-Case.belongsToMany(SafetyStatusAttribute, { through: SafetyStatus });
-SafetyStatusAttribute.belongsToMany(Case, { through: SafetyStatus });
-
 Relationship.hasMany(HouseHoldMembers, {foreignKey: 'relationship_id'})
 HouseHoldMembers.belongsTo(Relationship, {foreignKey: 'relationship_id'})
 
@@ -379,17 +321,6 @@ ReportTopConfiguration.belongsTo(ReportTopConfiguration, {foreignKey: 'report_to
 
 Referral.hasMany(ReferralList, {foreignKey: 'referral_id'})
 ReferralList.belongsTo(Referral, {foreignKey: 'referral_id'})
-
-Case.hasMany(CaseReferralResource, {foreignKey: 'case_id'})
-CaseReferralResource.belongsTo(Case, {foreignKey: 'case_id'})
-
-CaseReferralResource.hasMany(CaseReferralResourceList, 
-  {
-    foreignKey: 'case_referral_id',
-    onDelete: 'CASCADE'
-  }
-)
-CaseReferralResourceList.belongsTo(CaseReferralResource, {foreignKey: 'case_referral_id'})
 
 
 
@@ -404,12 +335,8 @@ module.exports = {
   CaseStages,
   PRSAfter,
   PRSOnly,
-  SafetyStatusAttribute,
-  SafetyStatus,
   Relationship,
   ReportTopConfiguration,
   Referral,
   ReferralList,
-  CaseReferralResource,
-  CaseReferralResourceList
 };

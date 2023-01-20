@@ -9,6 +9,7 @@ const {
   postUploadFile,
   putCase,
   getCaseByNumero,
+  getCleanCase,
 } = require("../controllers/case");
 const { validarCampos } = require("../middlewares/validarCampos");
 const { verificarToken } = require("../middlewares/verificarToken");
@@ -20,6 +21,7 @@ router.get("/search", verificarToken, getSearchCasesByStatus)
 router.get("/totalbystatus", verificarToken, getCaseAndStatus)
 router.get("/checknumero/:numero", verificarToken, getCaseByNumero)
 router.post("/uploadfile", verificarToken, postUploadFile)
+router.get("/newcase", verificarToken, getCleanCase)
 router.get("/:id", verificarToken, getCase)
 router.post("/", verificarToken, [
     check('name', 'Name is required').not().isEmpty(),
