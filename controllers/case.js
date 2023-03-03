@@ -24,6 +24,7 @@ const { SurveyUserInput, SurveyQuestionAnswer, SurveyUserInputLine, Survey, Surv
 const { addSurveyUserInputByIdCase } = require("./surveyUserInput");
 const { DataReport, Sections } = require("../models/dataReport");
 const { QuestionInstruction, QuestionInstructionSection, QuestionInstructionSubsection, QuestionInstructionSubsectionList } = require("../models/questionInstructions");
+const { serviceAreasData } = require("../data/roles");
 
 const upload = multer({
   fileFilter: (req, file, cb) => {
@@ -274,6 +275,28 @@ const getCase = async (req, res) => {
     }
     //end service Indicators
 
+    //service areas
+    let serviceAreasObj = null;
+    const existServiceAreas = await DataReport.findOne({
+      where: {
+        section: 'service_areas',
+        case_id: id
+      }
+    });
+    if(existServiceAreas){
+      serviceAreasObj = {
+        id: existServiceAreas.id,
+        data: JSON.parse(existServiceAreas.description)
+      }
+    }else{
+      //const serviceIndicators = await getQuestionInstructionsBySectionName('service_areas_supplemental_instructions');
+      serviceAreasObj = {
+        id: null,
+        data: serviceAreasData
+      }
+    }
+    //end service areas
+
     const myCase = {
       ...caseDB,
       Header: objheader,
@@ -281,7 +304,8 @@ const getCase = async (req, res) => {
       ReferralResource: referralResourceObj,
       CaseCloseProgram: caseCloseProgramObj,
       DestinationIndicator: destinationIndicatorsObj,
-      ServiceInstructions: serviceIndicatorsObj
+      ServiceInstructions: serviceIndicatorsObj,
+      ServiceAreas: serviceAreasObj
     }
 
     return res.status(200).json({

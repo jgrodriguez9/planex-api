@@ -25,7 +25,9 @@ const Sections = db.define("Sections", {
                 "header",
                 "safety_status",
                 "case_closure_program_outcomes_indicators",
-                "referrals_resource"
+                "referrals_resource",
+                "service_areas_supplemental_instructions",
+                "service_areas"
               ],
             ],
         },
