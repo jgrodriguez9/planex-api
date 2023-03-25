@@ -457,6 +457,10 @@ const postCase = async (req, res) =>{
     const { ServiceInstructions } = body;
     await createOrUpdateSection(ServiceInstructions, 'service_areas_supplemental_instructions', caseId)
 
+    //services areas
+    const { ServiceAreas } = body;
+    await createOrUpdateSection(ServiceAreas, 'service_areas', caseId)
+
     //newCase.createCaseInfo()
     return res.status(200).json({
       success: true,
@@ -585,6 +589,10 @@ const putCase = async (req, res) => {
     //destination of indicator
     const { ServiceInstructions } = body;
     await createOrUpdateSection(ServiceInstructions, 'service_areas_supplemental_instructions', caseToUpdate.id)
+
+    //services areas
+    const { ServiceAreas } = body;
+    await createOrUpdateSection(ServiceAreas, 'service_areas', caseToUpdate.id)
 
     return res.status(200).json({
       success: true,
