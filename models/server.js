@@ -56,9 +56,10 @@ class Server{
             datareport: "/api/datareport",
             serviceareas: "/api/serviceareas",
         };
-        const whitelist = process.env.NODE_ENV === 'production' ? ["https://penuel.plan-nex.com"] : ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"]
+        const whitelist = ["https://penuel.plan-nex.com", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002"]
         this.corsOptions = {
             origin: function (origin, callback) {
+	      console.log(origin);
               if (!origin || whitelist.indexOf(origin) !== -1) {          
                 callback(null, true)          
               } else {          
@@ -84,8 +85,8 @@ class Server{
             console.log('database connection success')
             
             //sync
-            //await db.sync({ alter: true }) 
-            //console.log('database online sync')
+           //await db.sync({ alter: true }) 
+           //console.log('database online sync')
 
             // //data default
             //Role.bulkCreate(data)

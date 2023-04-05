@@ -828,7 +828,7 @@ const postUploadFile = async (req, res) => {
 
 const getCaseByNumero = async (req, res) => {
     const { numero } = req.params;
-
+     
   try {
     //checamos si existe el usuario
     const caseObj = await Case.findOne({
@@ -838,7 +838,7 @@ const getCaseByNumero = async (req, res) => {
     if (!caseObj) {
       return res.status(404).json({
         success: false,
-        msg: "No se encuentra el case con id " + id,
+        msg: "No se encuentra el case con numero " + numero,
       });
     }
 
