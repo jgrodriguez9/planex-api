@@ -368,6 +368,10 @@ const getCleanCase = async (req, res) => {
       id: null,
       data: serviceIndicators
     }
+    const serviceAreasObj = {
+      id: null,
+      data: serviceAreasData
+    }
 
     const myCase = {
       Header: objheader,
@@ -375,7 +379,8 @@ const getCleanCase = async (req, res) => {
       ReferralResource: referralResourceObj,
       CaseCloseProgram: caseCloseProgramObj,
       DestinationIndicator: destinationIndicatorsObj,
-      ServiceInstructions: serviceIndicatorsObj
+      ServiceInstructions: serviceIndicatorsObj,
+      ServiceAreas: serviceAreasObj,
     }
 
     return res.status(200).json({
