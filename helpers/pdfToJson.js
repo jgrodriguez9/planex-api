@@ -305,9 +305,12 @@ const getSponsorShip = (rawTexts) => {
             if (data.heads.length - 1 == iter) {
               textOver = true;
             }
-            data.rows[camelCase(data.heads[iter])][0].push(
-              iterator.length < 1 ? iterator[0] : iterator.join(" ")
-            );
+            if(data.rows[camelCase(data.heads[iter])] !== undefined){
+              data.rows[camelCase(data.heads[iter])][0].push(
+                iterator.length < 1 ? iterator[0] : iterator.join(" ")
+              );
+            }
+            
           }
         }
         if (!textOver) iter++;

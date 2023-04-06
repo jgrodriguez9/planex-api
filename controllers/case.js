@@ -689,7 +689,8 @@ const postUploadFile = async (req, res) => {
 	try{
 		const result = { done: {}, draft: {} };
 		await parse(req.file.buffer).then((data) => {
-            //console.log(data)
+            console.log('--------------------------------------data---------------------------------------')
+            console.log(data)
             
             const fields = data.summary.fields;
 
@@ -705,7 +706,7 @@ const postUploadFile = async (req, res) => {
             })
             let homeAddress = ''
             let contactNumbers = []
-
+            let age='';
             if(sponsorInfoPrimary && sponsorInfoPrimary !== undefined){
                 const dateBirthSponsor = sponsorInfoPrimary?.fields[2]?.value ?? ''
                 if(dateBirthSponsor){
@@ -816,6 +817,8 @@ const postUploadFile = async (req, res) => {
 		  content: result,
 		});
 	}catch(err){
+    console.log('---------------------------err---------------------')
+    console.log(err)
 	  return res.status(500).json({
         success: false,
         msg: ERROR500,
