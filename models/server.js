@@ -23,6 +23,7 @@ const caseReferralResourceRoutes = require('../routes/casereferral')
 const questionInstructionsRoutes = require('../routes/questionInstructions')
 const dataReportRoutes = require('../routes/dataReport')
 const serviceAreasRoute = require('../routes/serviceAreas');
+const remindersRoute = require('../routes/reminders');
 //const Role = require('./role');
 //const User = require('./user');
 //const { encrypted } = require("../common/util");
@@ -55,6 +56,7 @@ class Server{
             questionInstructions: "/api/questioninstructions",
             datareport: "/api/datareport",
             serviceareas: "/api/serviceareas",
+            reminders: "/api/reminders",
         };
         const whitelist = ["https://penuel.plan-nex.com", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002"]
         this.corsOptions = {
@@ -134,6 +136,7 @@ class Server{
         this.app.use(this.apiPath.questionInstructions, questionInstructionsRoutes);
         this.app.use(this.apiPath.datareport, dataReportRoutes);
         this.app.use(this.apiPath.serviceareas, serviceAreasRoute)
+        this.app.use(this.apiPath.reminders, remindersRoute)
     }
 
     listen(){

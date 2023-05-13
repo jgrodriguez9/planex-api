@@ -282,6 +282,19 @@ const ReferralList = db.define("ReferralList", {
   },
 })
 
+const Reminders = db.define("Reminders", {
+  date: {
+    type: DataTypes.DATEONLY,
+  },
+  note: {
+    type: DataTypes.STRING,
+  },
+  checked: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+})
+
 
 
 
@@ -322,6 +335,11 @@ ReportTopConfiguration.belongsTo(ReportTopConfiguration, {foreignKey: 'report_to
 Referral.hasMany(ReferralList, {foreignKey: 'referral_id'})
 ReferralList.belongsTo(Referral, {foreignKey: 'referral_id'})
 
+Case.hasMany(Reminders, {
+  foreignKey: { name: "case_id", allowNull: false },
+});
+Reminders.belongsTo(Case, { foreignKey: "case_id" });
+
 
 
 module.exports = {
@@ -339,4 +357,5 @@ module.exports = {
   ReportTopConfiguration,
   Referral,
   ReferralList,
+  Reminders,
 };
