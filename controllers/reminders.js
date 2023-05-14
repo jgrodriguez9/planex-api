@@ -4,43 +4,30 @@ const { Reminders } = require("../models/case");
 const postReminders = async (req, res) =>{
     const { body } = req
     try {
-        const reminder = await Reminders.create(body);
+        console.log(body)
+        body.reminders.forEach(async (element) => {
+            if(element.id!==null){
+                const reminder = await Reminders.findByPk(element.id);
+                await reminder.update({
+                    date: element.date,
+                    note: element.note
+                })
+            }else{
+                await Reminders.create({
+                    date: element.date,
+                    note: element.note,
+                    case_id: body.case_id
+                });
+            }            
+        });
         return res.status(200).json({
             success: true,
             msg: 'salvado correctamente',
-            content: reminder
+            content: body
         })
         
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            msg: ERROR500,
-            errors: error.errors
-        })
-    }
-}
-
-const putReminders = async (req, res) =>{
-    const { id } = req.params;
-    const { body } = req
-    try {
-
-        //checamos si existe el usuario
-        const reminder = await Reminders.findByPk(id);
-        if(!reminder){
-            return res.status(404).json({
-                success: false,
-                msg: "No se encuentra el satges con id "+id
-            })
-        }
-        await reminder.update(body)
-        return res.status(200).json({
-            success: true,
-            msg: 'success',
-            content: reminder
-        })
-        
-    } catch (error) {
+        console.log(error)
         return res.status(500).json({
             success: false,
             msg: ERROR500,
@@ -102,7 +89,6 @@ const deleteReminders = async (req, res) =>{
 
 module.exports = {
     postReminders,
-    putReminders,
     getRemindersByCase,
     deleteReminders
 }
