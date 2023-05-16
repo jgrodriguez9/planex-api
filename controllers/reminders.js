@@ -1,5 +1,5 @@
 const { ERROR500 } = require("../constant/errors");
-const { Reminders } = require("../models/case");
+const { Reminders, Case } = require("../models/case");
 
 const postReminders = async (req, res) =>{
     const { body } = req
@@ -87,8 +87,66 @@ const deleteReminders = async (req, res) =>{
     }
 }
 
+const getRemindersAll = async(req, res) => {
+    try {
+        const reminders = await Reminders.findAll({
+            include: [Case],
+            where: {
+                checked: false
+            },
+            order: [['date', 'ASC']]            
+        });        
+
+        return res.status(200).json({
+            success: true,
+            msg: 'success',
+            content: reminders
+        })
+        
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            msg: ERROR500,
+            errors: error
+        })
+    }
+}
+
+const putMarkAsReaded = async (req, res) =>{
+    const { id } = req.params;
+    const { body } = req
+    try {
+
+        //checamos si existe el usuario
+        const reminder = await Reminders.findByPk(id);
+        if(!reminder){
+            return res.status(404).json({
+                success: false,
+                msg: "No se encuentra el reminder con id "+id
+            })
+        }
+        await reminder.update({
+            checked: true
+        })
+        return res.status(200).json({
+            success: true,
+            msg: 'success',
+            content: reminder
+        })
+        
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            msg: ERROR500,
+            errors: error.errors
+        })
+    }
+}
+
 module.exports = {
     postReminders,
     getRemindersByCase,
-    deleteReminders
+    deleteReminders,
+    getRemindersAll,
+    putMarkAsReaded
 }
