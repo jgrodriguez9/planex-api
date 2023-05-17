@@ -56,14 +56,14 @@ const parsePages = (pages, options = {}) => {
     FILTERED_VALUES = R.prop("partition", options);
   }
 
-  const hlinesPaged = R.map(
+  /*const hlinesPaged = R.map(
     hasName("partition") ? getHLinesByTexts : getHLines,
     pages
-  );
-  /*const hlinesPaged = [
+  );*/
+  const hlinesPaged = [
     [3.5970000000000004, 13.574, 20.359, 23.981, 30.939, 35.309, 39.621],
     [5.38, 8.888, 10.043, 14.839],
-  ];*/
+  ];
 
   const textsPaged = R.map(getTexts, pages);
   let groups = [];
@@ -329,26 +329,33 @@ const getSummary = (rawTexts) => {
   for (let i = 1; i < texts.length - 1; i += 2) {
     const currText = texts[i];
     const lastText = texts[i - 1];
-    if ((lastText.S + currText.S > 10)) {
-       fields.push({ name: lastText.T, value: "N/A" });
-       i = i-1;
-    } else {
-        fields.push({ name: lastText.T, value: currText.T });
-    }
+    fields.push({ name: lastText.T, value: currText.T });
   }
   summary.fields = fields;
   return summary;
 };
 
-exports.parse = (pdfBuffer, sync_lines) =>
+exports.parse = (pdfBuffer) =>
   new Promise((resolve, reject) => {
     const pdfParser = new PDFParser();
     pdfParser.on("pdfParser_dataReady", (pdfData) => {
       try {
         var data = getSections(
-          parsePages(pdfData.Pages, sync_lines ? {
-            partition: sync_lines,
-          } : {})
+          parsePages(pdfData.Pages, {
+            partition: [
+              "UAC Basic Information",
+              "Demographic Information",
+              "Relationship to UC",
+              "Contact Information",
+              "Flags",
+              "Additional Information",
+              "All Sponsorships",
+              "Addresses",
+              "Other Sponsors Using Address",
+              "Household Information",
+              "Affidavits of Support:",
+            ],
+          })
         );
         resolve(data);
       } catch (err) {

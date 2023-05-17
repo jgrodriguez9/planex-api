@@ -89,8 +89,11 @@ const getCaseList = async (req, res) => {
         model: CaseInfo,
         where: whereQuery,
       },
+      {
+        model: SponsorInfo,
+        include: [ContactNumbers],
+      }
     ],
-    order: [[CaseInfo, 'dateAcceptance', 'DESC']],
     offset: page * size,
     limit: size,
   });
@@ -667,6 +670,7 @@ const getCaseAndStatus = async (req, res) => {
 };
 
 const postUploadFile = async (req, res) => {
+  const is_sponsor_assessment = req.is_sponsor_assessment ?? false;
   upload(req, res, async function (err) {
     if (err instanceof multer.MulterError) {
       return res.status(400).json({
@@ -693,7 +697,38 @@ const postUploadFile = async (req, res) => {
     }
 	try{
 		const result = { done: {}, draft: {} };
-		await parse(req.file.buffer).then((data) => {
+    const synch_lines =
+        is_sponsor_assessment === true
+          ? [
+              "UAC Basic Information",
+              "Demographic Information",
+              "Relationship to UC",
+              "Contact Information",
+              "Flags",
+              "Additional Information",
+              "All Sponsorships",
+              "Addresses",
+              "Other Sponsors Using Address",
+              "Household Information",
+              "Affidavits of Support",
+            ]
+          : [
+              "UAC Basic Information",
+              "Sponsor Demographic Information",
+              "Relationship to Child",          
+              "Contact Information",
+              "Flags",
+              "Sponsorships",
+              "Family Relationships",
+              "Past Addresses",
+              "Other Sponsors Using Address",
+              "Household",
+              "Household Members",
+              "Employment",
+              "Flags",
+              "Certification",
+            ];
+		await parse(req.file.buffer, synch_lines).then((data) => {
             console.log('--------------------------------------data---------------------------------------')
             console.log(data)
             
