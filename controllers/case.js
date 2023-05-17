@@ -83,7 +83,7 @@ const getCaseList = async (req, res) => {
   };
 
   const { count, rows } = await Case.findAndCountAll({
-    attributes: ["id", "name", "aNumber", "placeBirth"],
+    attributes: ["id", "name", "lastName", "aNumber", "placeBirth"],
     include: [
       {
         model: CaseInfo,
