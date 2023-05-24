@@ -2,11 +2,12 @@ const { Router } = require("express");
 const { verificarToken } = require("../middlewares/verificarToken");
 const { check } = require("express-validator");
 const { validarCampos } = require("../middlewares/validarCampos");
-const { deleteUser, getUser, getUserList, postUser, putUser } = require('../controllers/user');
+const { deleteUser, getUser, getUserList, postUser, putUser, getUserListAll } = require('../controllers/user');
 
 const router = Router()
 
 router.get("/", verificarToken, getUserList)
+router.get("/all", verificarToken, getUserListAll)
 router.get("/:id", verificarToken, getUser)
 router.post('/', verificarToken, [
     check('name', 'Campo requerido').not().isEmpty(),

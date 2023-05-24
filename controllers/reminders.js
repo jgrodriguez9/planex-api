@@ -1,5 +1,6 @@
 const { ERROR500 } = require("../constant/errors");
 const { Reminders, Case } = require("../models/case");
+const User = require("../models/user");
 
 const postReminders = async (req, res) =>{
     const { body } = req
@@ -10,13 +11,15 @@ const postReminders = async (req, res) =>{
                 const reminder = await Reminders.findByPk(element.id);
                 await reminder.update({
                     date: element.date,
-                    note: element.note
+                    note: element.note,
+                    user_id: element.User.id
                 })
             }else{
                 await Reminders.create({
                     date: element.date,
                     note: element.note,
-                    case_id: body.case_id
+                    case_id: body.case_id,
+                    user_id: element.User.id
                 });
             }            
         });
@@ -40,6 +43,7 @@ const getRemindersByCase = async(req, res) => {
     const { id } = req.params;
     try {
         const reminders = await Reminders.findAll({
+            include: [User],
             where: {
                 case_id: id
             }

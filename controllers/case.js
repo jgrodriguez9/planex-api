@@ -25,6 +25,7 @@ const { addSurveyUserInputByIdCase } = require("./surveyUserInput");
 const { DataReport, Sections } = require("../models/dataReport");
 const { QuestionInstruction, QuestionInstructionSection, QuestionInstructionSubsection, QuestionInstructionSubsectionList } = require("../models/questionInstructions");
 const { serviceAreasData } = require("../data/roles");
+const User = require("../models/user");
 
 const upload = multer({
   fileFilter: (req, file, cb) => {
@@ -124,6 +125,7 @@ const getCase = async (req, res) => {
             include: {model: SurveyQuestionAnswer}
           }          
         },
+        User
       ],
     });
     if (!caseObj) {
@@ -410,7 +412,8 @@ const postCase = async (req, res) =>{
             aka: body.aka,
             birthday: body.birthday,
             placeBirth: body.placeBirth,
-            gender: body.gender
+            gender: body.gender,
+            user_id: body.User.id
         }
         const newCase = await Case.create(caseObj);
         const caseId = newCase.getDataValue('id');
@@ -494,13 +497,14 @@ const putCase = async (req, res) => {
 
   try {
     const caseToUpdate = await Case.findByPk(id);
-    const { name, aNumber, birthday, gender, placeBirth } = body;
+    const { name, aNumber, birthday, gender, placeBirth, User } = body;
     caseToUpdate?.set({
       name: name,
       aNumber: aNumber,
       birthday: birthday,
       gender: gender,
       placeBirth: placeBirth,
+      user_id: User.id
     });
     await caseToUpdate?.save();
 

@@ -1,6 +1,7 @@
 const moment = require("moment");
 const { DataTypes } = require("sequelize");
 const db = require("../db/connections");
+const User = require("./user");
 
 const Case = db.define("Case", {
     aNumber: {
@@ -339,6 +340,17 @@ Case.hasMany(Reminders, {
   foreignKey: { name: "case_id", allowNull: false },
 });
 Reminders.belongsTo(Case, { foreignKey: "case_id" });
+
+User.hasMany(Case, {
+  foreignKey: { name: "user_id", allowNull: true },
+});
+Case.belongsTo(User, { foreignKey: "user_id" });
+
+User.hasMany(Reminders, {
+  foreignKey: { name: "user_id", allowNull: true },
+});
+Reminders.belongsTo(User, { foreignKey: "user_id" });
+
 
 
 

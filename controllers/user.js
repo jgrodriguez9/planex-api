@@ -200,10 +200,20 @@ const deleteUser = async (req, res) =>{
     }
 }
 
+const getUserListAll = async (req, res) => {
+    const users = await User.findAll();
+    return res.status(200).json({
+        success: true,
+        msg: 'success',
+        content: users
+    })
+}
+
 module.exports = {
     getUserList,
     getUser,
     postUser,
     putUser,
-    deleteUser
+    deleteUser,
+    getUserListAll
 }
