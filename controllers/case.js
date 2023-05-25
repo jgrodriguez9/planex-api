@@ -26,6 +26,7 @@ const { DataReport, Sections } = require("../models/dataReport");
 const { QuestionInstruction, QuestionInstructionSection, QuestionInstructionSubsection, QuestionInstructionSubsectionList } = require("../models/questionInstructions");
 const { serviceAreasData } = require("../data/roles");
 const User = require("../models/user");
+const { getDecodeToken, isAdministrador } = require("../common/util");
 
 const upload = multer({
   fileFilter: (req, file, cb) => {
@@ -61,8 +62,6 @@ const getCaseList = async (req, res) => {
   const startDate = req.query.startDate;
   const endDate = req.query.endDate;
 
-  console.log(statusQuery);
-
   let whereQuery = {
     status:
       statusQuery !== "null" && statusQuery !== undefined
@@ -83,9 +82,13 @@ const getCaseList = async (req, res) => {
         : { [Op.not]: null },
   };
 
+  const token = req.header('authorization').split(" ")[1]
+  const authData = getDecodeToken(token)
+
   const { count, rows } = await Case.findAndCountAll({
     attributes: ["id", "name", "lastName", "aNumber", "placeBirth"],
     include: [
+      User,
       {
         model: CaseInfo,
         where: whereQuery,
@@ -95,6 +98,11 @@ const getCaseList = async (req, res) => {
         include: [ContactNumbers],
       }
     ],
+    where: {
+      user_id: isAdministrador(authData.user.Role.name) ? {
+          [Op.not]: null
+      } : authData.user.id
+    },
     offset: page * size,
     limit: size,
   });
@@ -134,6 +142,17 @@ const getCase = async (req, res) => {
         msg: "No se encuentra el case con id " + id,
       });
     }
+
+    const token = req.header('authorization').split(" ")[1]
+    const authData = getDecodeToken(token)
+    if(caseObj.user_id !== authData.user.id && !isAdministrador(authData.user.Role.name)){
+      return res.status(404).json({
+        success: false,
+        msg: "No tienes permiso para accesar a este caso con id " + id,
+      });
+    }
+
+
     const caseDB = await caseObj.get();
 
     //checamos si ya tenemos unheader
@@ -650,8 +669,16 @@ const getSearchCasesByStatus = async (req, res) => {
 };
 
 const getCaseAndStatus = async (req, res) => {
+
+  const token = req.header('authorization').split(" ")[1]
+  const authData = getDecodeToken(token)
   const cases = await Case.findAll({
     include: [CaseInfo],
+    where: {
+      user_id: isAdministrador(authData.user.Role.name) ? {
+        [Op.not]: null
+      } : authData.user.id
+    }
   });
 
   const statusActive = cases.filter(

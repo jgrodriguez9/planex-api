@@ -27,10 +27,15 @@ const getDecodeToken = (token) =>{
     return decoded;
 }
 
+const isAdministrador = (role) => {
+    return role === 'ADMINISTRADOR';
+}
+
 module.exports = {
     secret_token,
     encrypted,
     decrypted,
     getToken,
-    getDecodeToken
+    getDecodeToken,
+    isAdministrador
 }

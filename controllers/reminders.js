@@ -1,11 +1,12 @@
+const { Op } = require("sequelize");
 const { ERROR500 } = require("../constant/errors");
 const { Reminders, Case } = require("../models/case");
 const User = require("../models/user");
+const { getDecodeToken, isAdministrador } = require("../common/util");
 
 const postReminders = async (req, res) =>{
     const { body } = req
     try {
-        console.log(body)
         body.reminders.forEach(async (element) => {
             if(element.id!==null){
                 const reminder = await Reminders.findByPk(element.id);
@@ -93,19 +94,36 @@ const deleteReminders = async (req, res) =>{
 
 const getRemindersAll = async(req, res) => {
     try {
-        const reminders = await Reminders.findAll({
-            include: [Case],
-            where: {
-                checked: false
-            },
-            order: [['date', 'ASC']]            
-        });        
+        const pageAsNumber = Number.parseInt(req.query.page);
+        const sizeAsNumber = Number.parseInt(req.query.size);
 
-        return res.status(200).json({
-            success: true,
-            msg: 'success',
-            content: reminders
-        })
+        let page = 0;
+        if (!Number.isNaN(pageAsNumber) && pageAsNumber > 0) {
+            page = pageAsNumber;
+        }
+
+        let size = 20;
+        if (!Number.isNaN(sizeAsNumber) && sizeAsNumber > 0 && sizeAsNumber < 20) {
+            size = sizeAsNumber;
+        }
+
+        const token = req.header('authorization').split(" ")[1]
+        const authData = getDecodeToken(token)
+        
+        const { count, rows } = await Reminders.findAndCountAll({
+            include: [Case, User],
+            where: {
+                checked: false,
+                user_id: isAdministrador(authData.user.Role.name) ? {
+                    [Op.not]: null
+                } : authData.user.id
+            },
+            order: [['date', 'ASC']],
+            offset: page * size,
+            limit: size,           
+        });
+        
+        return res.json({ content: rows, total_pages: Math.ceil(count / size), success: true, });
         
     } catch (error) {
         return res.status(500).json({
