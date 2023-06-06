@@ -20,7 +20,7 @@ router.get("/", verificarToken, getCaseList)
 router.get("/search", verificarToken, getSearchCasesByStatus) 
 router.get("/totalbystatus", verificarToken, getCaseAndStatus)
 router.get("/checknumero/:numero", verificarToken, getCaseByNumero)
-router.post("/uploadfile", verificarToken, postUploadFile)
+router.post("/uploadfile/:is_sponsor_assessment", verificarToken, postUploadFile)
 router.get("/newcase", verificarToken, getCleanCase)
 router.get("/:id", verificarToken, getCase)
 router.post("/", verificarToken, [

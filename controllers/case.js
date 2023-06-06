@@ -19,7 +19,7 @@ const {
   ReferralList,
 } = require("../models/case");
 const fs = require("fs");
-const { parse } = require("../helpers/pdfToJson");
+const { parse } = require("../helpers/pdfToJsonCurrent");
 const { SurveyUserInput, SurveyQuestionAnswer, SurveyUserInputLine, Survey, SurveyQuestion } = require("../models/survey");
 const { addSurveyUserInputByIdCase } = require("./surveyUserInput");
 const { DataReport, Sections } = require("../models/dataReport");
@@ -701,7 +701,9 @@ const getCaseAndStatus = async (req, res) => {
 };
 
 const postUploadFile = async (req, res) => {
-  const is_sponsor_assessment = req.is_sponsor_assessment ?? false;
+  console.log('-----------------------------req.body------------------------')
+  console.log(req.params)
+  const is_sponsor_assessment = Number(req.params.is_sponsor_assessment) === 1 ? true : false;
   upload(req, res, async function (err) {
     if (err instanceof multer.MulterError) {
       return res.status(400).json({
@@ -729,7 +731,7 @@ const postUploadFile = async (req, res) => {
 	try{
 		const result = { done: {}, draft: {} };
     const synch_lines =
-        is_sponsor_assessment === true
+        is_sponsor_assessment === false
           ? [
               "UAC Basic Information",
               "Demographic Information",
@@ -745,22 +747,28 @@ const postUploadFile = async (req, res) => {
             ]
           : [
               "UAC Basic Information",
-              "Sponsor Demographic Information",
-              "Relationship to Child",          
+              "Basic Information",
+              "Phone & Email",
+              "Legal Status",
+              "Proof of Identity",
               "Contact Information",
-              "Flags",
+              "Relationship to Child",
+              "Criminal History & Background Checks",
               "Sponsorships",
               "Family Relationships",
               "Past Addresses",
               "Other Sponsors Using Address",
+              "Family Relationships",
               "Household",
-              "Household Members",
               "Employment",
+              "Care Plan",
+              "Trafficking & Fraud",
               "Flags",
+              "Case Manager Assessment",
               "Certification",
             ];
-		await parse(req.file.buffer, synch_lines).then((data) => {
-            console.log('--------------------------------------data---------------------------------------')
+		await parse(req.file.buffer, synch_lines, is_sponsor_assessment).then((data) => {
+            //console.log('--------------------------------------data---------------------------------------')
             console.log(data)
             
             const fields = data.summary.fields;
@@ -775,9 +783,9 @@ const postUploadFile = async (req, res) => {
             const sponsorContacts = data?.profile?.find(item => {
                 return item.label.includes('Contact Information')
             })
-            let homeAddress = ''
-            let contactNumbers = []
-            let age='';
+			let homeAddress = "";
+			let contactNumbers = [];
+			let age = 0;
             if(sponsorInfoPrimary && sponsorInfoPrimary !== undefined){
                 const dateBirthSponsor = sponsorInfoPrimary?.fields[2]?.value ?? ''
                 if(dateBirthSponsor){
@@ -786,18 +794,23 @@ const postUploadFile = async (req, res) => {
                 }    
                 
             }
-            if(sponsorContacts && sponsorContacts !== undefined){
-                const phone1 = sponsorContacts?.fields.find(item=>item.name.replaceAll(" ", "")==='PrimaryPhone:')
-                if(phone1?.value) contactNumbers.push({number: phone1.value})
-                const phone2 = sponsorContacts?.fields.find(item=>item.name.replaceAll(" ", "")==='BackupPhone#:')
-                if(phone2?.value) contactNumbers.push({number: phone2.value})
-
-                const streetA = sponsorContacts?.fields[0]?.value ?? ''
-                const cityA = sponsorContacts?.fields[1]?.value ?? ''
-                const stateA = sponsorContacts?.fields[2]?.value ?? ''
-                const countryA = sponsorContacts?.fields[4]?.value ?? ''
-                const zipCodeA = sponsorContacts?.fields[3]?.value ?? ''
-                homeAddress = `${streetA} ${cityA} ${stateA} ${countryA} ${zipCodeA}`
+           // console.log(sponsorContacts)
+            if (sponsorContacts && sponsorContacts !== undefined) {
+              const phone1 = sponsorContacts?.fields.find(
+                (item) => item.name.replaceAll(" ", "") === "PrimaryPhone:"
+              );
+              if (phone1?.value) contactNumbers.push({ number: phone1.value });
+              const phone2 = sponsorContacts?.fields.find(
+                (item) => item.name.replaceAll(" ", "") === "BackupPhone#:"
+              );
+              if (phone2?.value) contactNumbers.push({ number: phone2.value });
+    
+              const streetA = sponsorContacts?.fields[0]?.value ?? "";
+              const cityA = sponsorContacts?.fields[1]?.value ?? "";
+              const stateA = sponsorContacts?.fields[2]?.value ?? "";
+              const countryA = sponsorContacts?.fields[4]?.value ?? "";
+              const zipCodeA = sponsorContacts?.fields[3]?.value ?? "";
+              homeAddress = `${streetA} ${cityA} ${stateA} ${countryA} ${zipCodeA}`;
             }
 
             //house hold members
@@ -805,7 +818,7 @@ const postUploadFile = async (req, res) => {
             const houseHoldM = data?.profile?.find(item => {
                 return item.label.includes('Household Information:')
             })
-            console.log(JSON.stringify(houseHoldM))
+            //console.log(JSON.stringify(houseHoldM))
             if(houseHoldM && houseHoldM !== undefined){
                 if(houseHoldM?.rows?.firstName[0].length > 0){
                     houseHoldMembers = houseHoldM?.rows?.firstName[0].map((item, index) => (
