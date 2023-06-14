@@ -701,10 +701,8 @@ const getCaseAndStatus = async (req, res) => {
 };
 
 const postUploadFile = async (req, res) => {
-  console.log('-----------------------------req.body------------------------')
-  console.log(req.params)
-  const is_sponsor_assessment = Number(req.params.is_sponsor_assessment) === 1 ? true : false;
   upload(req, res, async function (err) {
+    const is_sponsor_assessment = Number(req.params.is_sponsor_assessment) === 1 ? true : false;
     if (err instanceof multer.MulterError) {
       return res.status(400).json({
         success: false,
@@ -720,6 +718,7 @@ const postUploadFile = async (req, res) => {
           errors: err,
         });
       else {
+        console.log('--------------------------------------------;entro')
         return res.status(500).json({
           success: false,
           msg: ERROR500,
@@ -728,9 +727,9 @@ const postUploadFile = async (req, res) => {
         });
       }
     }
-	try{
-		const result = { done: {}, draft: {} };
-    const synch_lines =
+    try {
+      const result = { done: {}, draft: {} };
+      const synch_lines =
         is_sponsor_assessment === false
           ? [
               "UAC Basic Information",
@@ -751,6 +750,7 @@ const postUploadFile = async (req, res) => {
               "Phone & Email",
               "Legal Status",
               "Proof of Identity",
+              "Language & Religion",       
               "Contact Information",
               "Relationship to Child",
               "Criminal History & Background Checks",
@@ -762,154 +762,189 @@ const postUploadFile = async (req, res) => {
               "Household",
               "Employment",
               "Care Plan",
-              "Trafficking & Fraud",
               "Flags",
-              "Case Manager Assessment",
               "Certification",
             ];
-		await parse(req.file.buffer, synch_lines, is_sponsor_assessment).then((data) => {
-            //console.log('--------------------------------------data---------------------------------------')
-            console.log(data)
-            
-            const fields = data.summary.fields;
 
-            const sponsorInfoPrimary = data?.profile?.find(item => {
-                return item.label.includes('Demographic Information')
-            })
-            //console.log(JSON.stringify(sponsorInfoPrimary))
-            const sponsorRelationship = data?.profile?.find(item => {
-                return item.label.includes('Relationship to UC')
-            })
-            const sponsorContacts = data?.profile?.find(item => {
-                return item.label.includes('Contact Information')
-            })
-			let homeAddress = "";
-			let contactNumbers = [];
-			let age = 0;
-            if(sponsorInfoPrimary && sponsorInfoPrimary !== undefined){
-                const dateBirthSponsor = sponsorInfoPrimary?.fields[2]?.value ?? ''
-                if(dateBirthSponsor){
-                    const _mBirthay = moment(dateBirthSponsor, "MM/DD/YYYY")
-                    age = moment().diff(_mBirthay, 'years')
-                }    
-                
-            }
-           // console.log(sponsorContacts)
-            if (sponsorContacts && sponsorContacts !== undefined) {
-              const phone1 = sponsorContacts?.fields.find(
-                (item) => item.name.replaceAll(" ", "") === "PrimaryPhone:"
-              );
-              if (phone1?.value) contactNumbers.push({ number: phone1.value });
-              const phone2 = sponsorContacts?.fields.find(
-                (item) => item.name.replaceAll(" ", "") === "BackupPhone#:"
-              );
-              if (phone2?.value) contactNumbers.push({ number: phone2.value });
-    
-              const streetA = sponsorContacts?.fields[0]?.value ?? "";
-              const cityA = sponsorContacts?.fields[1]?.value ?? "";
-              const stateA = sponsorContacts?.fields[2]?.value ?? "";
-              const countryA = sponsorContacts?.fields[4]?.value ?? "";
-              const zipCodeA = sponsorContacts?.fields[3]?.value ?? "";
-              homeAddress = `${streetA} ${cityA} ${stateA} ${countryA} ${zipCodeA}`;
-            }
+      await parse(req.file.buffer, synch_lines, is_sponsor_assessment).then((data) => {
+        //console.log(data.profile[14])
+        const fields = data.summary.fields;
+      
 
-            //house hold members
-            let houseHoldMembers = []
-            const houseHoldM = data?.profile?.find(item => {
-                return item.label.includes('Household Information:')
-            })
-            //console.log(JSON.stringify(houseHoldM))
-            if(houseHoldM && houseHoldM !== undefined){
-                if(houseHoldM?.rows?.firstName[0].length > 0){
-                    houseHoldMembers = houseHoldM?.rows?.firstName[0].map((item, index) => (
-                        {
-                            name: `${item} ${houseHoldM?.rows?.lastName[0][index]}`,
-                            nacionality: '',
-                            age: houseHoldM?.rows?.currentAge[0][index],
-                            gender: houseHoldM?.rows?.gender[0][index],
-                            relationshipSponsor: houseHoldM?.rows?.relationshipToSponsor[0][index],                           
-                        }
-                    ))
-                }                
-            }
-
-            result.done = {
-                name: fields[0]?.value ?? '' ,
-                lastName: fields[1]?.value ?? "",
-                aka: fields[2]?.value ?? "",
-                aNumber: fields[6]?.value ?? null,
-                birthday: moment(fields[4]?.value, "MM/DD/YYYY").format("YYYY-MM-DD") ?? null,
-                placeBirth: fields[10]?.value ?? "",
-                gender: (fields[5]?.value ==  "M" || fields[5]?.value ==  "Male") ? 'Male' : "Female",
-                sponsorInfo: {
-                    name: sponsorInfoPrimary?.fields[0]?.value ?? '',
-                    lastName: sponsorInfoPrimary?.fields[1]?.value ?? '',
-                    age: age,
-                    relationship: sponsorRelationship?.fields[0]?.value ?? '',
-                    nationality: sponsorInfoPrimary?.fields[7]?.value ?? '',
-                    contactNumbers: contactNumbers,
-                    homeAddress: homeAddress,
-                    gender: (sponsorInfoPrimary?.fields[6]?.value ==  "M" || sponsorInfoPrimary?.fields[6]?.value ==  "Male") 
-                            ? 'Male' : "Female",
-                },
-                caseInfo: {
-                    dateAcceptance: null,
-                    dateRelease: null,
-                    dateComplete: null,
-                    dateClosure: null,
-                    postReleaseAgency: '',
-                    caseManager: '',
-                    contactInformation: '',
-                    status: 'active'
-                },
-                houseHoldMembers: [...houseHoldMembers],
-                reasonReferral: {
-                    prsOnly: {
-                        criminalHistory: false,
-                        gangInvolvement: false,
-                        behavioralProblems: false,
-                        abuseHistory: false,
-                        traumaHistory: false,
-                        mentalHealth: false,
-                        suicidalBehaviors: false,
-                        substanceAbuse: false,
-                        cognitiveDevelopmentalDelays: false,
-                        lackFormalEducation: false,
-                        medicalCondition: false,
-                        disability: false,
-                        pregnantParentingTeen: false,
-                        lackPriorRelationshipSponsor: false,
-                        sponsorLackKnowledge: false,
-                        traffickingConcern: false,
-                        sponsorConcerns: false,
-                        prsDiscretionary: false,
-                        categorySponsorship: false,
-                        other: false,
-                    },
-                    prsAfter: {
-                        tvpraTraffickingConcerns: false,
-                        tvpraSponsorConcerns: false,
-                        tvpraDisability: false,
-                        tvpraAbuseHistory: false,
-                    }		
+        const sponsorInfoPrimary = !is_sponsor_assessment ? data?.profile?.find((item) => {
+          return item.label.includes("Demographic Information");
+        }) : function(sponsorInfo) {
+             let fields = [];
+             let iter = 0;
+             const [label, ...rows] = sponsorInfo;
+             rows.map( (item, index) => {
+              //console.log(item, index)
+              if(index < 10){
+                if(index % 2 === 0){
+                  fields.push({label: item.T, value: ""});
+                }else{
+                  //console.log(index)
+                  fields[iter].value = item.T;
+                  iter+=1;
                 }
-            };		  
-		});
-		return res.status(200).json({
-		  success: true,
-		  msg: "success!",
-		  content: result,
-		});
-	}catch(err){
-    console.log('---------------------------err---------------------')
-    console.log(err)
-	  return res.status(500).json({
+              }
+             })
+            fields.push({label: "A#", value: rows[rows.length - 4].T != 'A#' ? rows[rows.length - 4].T : '' }, { label: "Gender", value: [rows[rows.length - 2].T, rows[rows.length - 1].T].join(" ")} );
+            return fields
+          }(data.profile[0])
+          //console.log(sponsorInfoPrimary)
+          //return
+        console.log(JSON.stringify(sponsorInfoPrimary))
+        const sponsorRelationship = data?.profile?.find((item) => {
+          return item.label?.includes("Relationship to UC");
+        });
+        const sponsorContacts = data?.profile?.find((item) => {
+          return item.label?.includes("Contact Information");
+        });
+        let homeAddress = "";
+        let contactNumbers = [];
+        let age = 0;
+
+        // if (sponsorInfoPrimary && sponsorInfoPrimary !== undefined) {
+        //   const dateBirthSponsor = sponsorInfoPrimary?.fields[2]?.value ?? "";
+        //   if (dateBirthSponsor) {
+        //     const _mBirthay = moment(dateBirthSponsor, "MM/DD/YYYY");
+        //     age = moment().diff(_mBirthay, "years");
+        //   }
+        // }
+        if (sponsorContacts && sponsorContacts !== undefined) {
+          const phone1 = sponsorContacts?.fields.find(
+            (item) => item.name.replaceAll(" ", "") === "PrimaryPhone:"
+          );
+          if (phone1?.value) contactNumbers.push({ number: phone1.value });
+          const phone2 = sponsorContacts?.fields.find(
+            (item) => item.name.replaceAll(" ", "") === "BackupPhone#:"
+          );
+          if (phone2?.value) contactNumbers.push({ number: phone2.value });
+
+          const streetA = sponsorContacts?.fields[0]?.value ?? "";
+          const cityA = sponsorContacts?.fields[1]?.value ?? "";
+          const stateA = sponsorContacts?.fields[2]?.value ?? "";
+          const countryA = sponsorContacts?.fields[4]?.value ?? "";
+          const zipCodeA = sponsorContacts?.fields[3]?.value ?? "";
+          homeAddress = `${streetA} ${cityA} ${stateA} ${countryA} ${zipCodeA}`;
+        }
+
+        //house hold members
+        let houseHoldMembers = [];
+        const houseHoldM = data?.profile?.find((item) => {
+          return item.label?.includes("Household Information:");
+        });
+        //console.log(JSON.stringify(houseHoldM));
+        if (houseHoldM && houseHoldM !== undefined) {
+          if (houseHoldM?.rows?.firstName[0].length > 0) {
+            houseHoldMembers = houseHoldM?.rows?.firstName[0].map(
+              (item, index) => ({
+                name: `${item} ${houseHoldM?.rows?.lastName[0][index]}`,
+                nacionality: "",
+                age: houseHoldM?.rows?.currentAge[0][index],
+                gender: houseHoldM?.rows?.gender[0][index],
+                relationshipSponsor:
+                  houseHoldM?.rows?.relationshipToSponsor[0][index],
+              })
+            );
+          }
+        }
+
+        result.done = {
+          name: fields[0]?.value ?? "",
+          lastName: fields[1]?.value ?? "",
+          aka: fields[2]?.value ?? "",
+          aNumber: fields[6]?.value ?? null,
+          birthday:
+            moment(fields[4]?.value, "MM/DD/YYYY").format("YYYY-MM-DD") ?? null,
+          placeBirth: fields[10]?.value ?? "",
+          gender:
+            fields[5]?.value == "M" || fields[5]?.value == "Male"
+              ? "Male"
+              : "Female",
+          sponsorInfo: is_sponsor_assessment ? 
+          {
+            name: sponsorInfoPrimary[1]?.value ?? "",
+            lastName: sponsorInfoPrimary[2]?.value ?? "",
+            age: age,
+            relationship:  "",
+            nationality: sponsorInfoPrimary[4]?.value ?? "",
+            contactNumbers: contactNumbers,
+            homeAddress: homeAddress,
+            gender: ""
+          } :
+          {
+            name: sponsorInfoPrimary?.fields[0]?.value ?? "",
+            lastName: sponsorInfoPrimary?.fields[1]?.value ?? "",
+            age: age,
+            relationship: sponsorRelationship?.fields[0]?.value ?? "",
+            nationality: sponsorInfoPrimary?.fields[7]?.value ?? "",
+            contactNumbers: contactNumbers,
+            homeAddress: homeAddress,
+            gender:
+              sponsorInfoPrimary?.fields[6]?.value == "M" ||
+              sponsorInfoPrimary?.fields[6]?.value == "Male"
+                ? "Male"
+                : "Female",
+          },
+          caseInfo: {
+            dateAcceptance: null,
+            dateRelease: null,
+            dateComplete: null,
+            dateClosure: null,
+            postReleaseAgency: "",
+            caseManager: "",
+            contactInformation: "",
+            status: "active",
+          },
+          houseHoldMembers: [...houseHoldMembers],
+          reasonReferral: {
+            prsOnly: {
+              criminalHistory: false,
+              gangInvolvement: false,
+              behavioralProblems: false,
+              abuseHistory: false,
+              traumaHistory: false,
+              mentalHealth: false,
+              suicidalBehaviors: false,
+              substanceAbuse: false,
+              cognitiveDevelopmentalDelays: false,
+              lackFormalEducation: false,
+              medicalCondition: false,
+              disability: false,
+              pregnantParentingTeen: false,
+              lackPriorRelationshipSponsor: false,
+              sponsorLackKnowledge: false,
+              traffickingConcern: false,
+              sponsorConcerns: false,
+              prsDiscretionary: false,
+              categorySponsorship: false,
+              other: false,
+            },
+            prsAfter: {
+              tvpraTraffickingConcerns: false,
+              tvpraSponsorConcerns: false,
+              tvpraDisability: false,
+              tvpraAbuseHistory: false,
+            },
+          },
+        };
+      });
+      return res.status(200).json({
+        success: true,
+        msg: "success!",
+        content: result,
+      });
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({
         success: false,
-        msg: ERROR500,
-		code: "GENERIC_ERROR",
+        msg: err.message,
+        code: "GENERIC_ERROR",
         errors: err,
       });
-	}
+    }
   });
 };
 

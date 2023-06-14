@@ -35,13 +35,15 @@ const isDistanceBetweenEmptyBlock = (th, t1) => {
 function getHLinesY(items) {
   let arr = [];
   items.forEach((element) => {
-    const text = decodeURIComponent(R.trim(R.path(["R", 0], element).T)).split(
+    const el = R.path(["R", 0], element);
+    const text = decodeURIComponent(R.trim(el.T)).split(
       TEXT_SEPARATOR
     )[0];
-    if (FILTERED_VALUES.includes(text)) {
+    if (FILTERED_VALUES.includes(text) && el.TS[1] > 19) {
       arr.push(element.y);
     }
   });
+  //console.log(arr)
   return arr;
 }
 
@@ -61,12 +63,12 @@ const isBold = (text) => text.TS[2] === 1;
 
 const parsePages = (pages, options = {}) => {
   const hasName = R.has(R.__, options);
-  if (hasName("partition")) {
-    FILTERED_VALUES = R.prop("partition", options);
+  if (hasName("debug") ) {
+    FILTERED_VALUES = R.prop("debug", options);
   }
 
   const hlinesPaged = R.map(
-    hasName("partition") ? getHLinesByTexts : getHLines,
+    hasName("debug") ? getHLinesByTexts : getHLines,
     pages
   );
   /*const hlinesPaged = [
@@ -104,7 +106,6 @@ const parsePages = (pages, options = {}) => {
 };
 
 const getSections = (groups, is_sponsor_assessment) => {
-  console.log(is_sponsor_assessment)
   // Get the sections
   const sections = {};
   groups = R.compose(R.unnest, R.map(R.valuesIn))(groups);
@@ -175,17 +176,18 @@ const getSponsorShip = (rawTexts) => {
       el = getRawTexts(el);
       const [head, ...texts] = el;
       data.label = head.T;
+      //console.log(texts)
       data.fields = [
         {
           name: texts[0].T + " " + texts[1].T,
-          value: texts[2].T + " " + texts[3].T,
+          value: texts[2].T + " " + texts[3]?.T,
         },
         {
-          name: texts[4].T + " " + texts[5].T,
-          value: texts[6].T + " " + texts[7].T,
+          name: texts[4]?.T + " " + texts[5]?.T,
+          value: texts[6]?.T + " " + texts[7]?.T,
         },
         {
-          name: texts[8].T,
+          name: texts[8]?.T,
           value: R.map(R.prop("T"), texts.slice(9, texts.length)).join(" "),
         },
       ];
@@ -399,8 +401,8 @@ exports.parse = (pdfBuffer, sync_lines, is_sponsor_assessment) =>
     pdfParser.on("pdfParser_dataReady", (pdfData) => {
       try {
         var data = getSections(
-          parsePages(pdfData.Pages, sync_lines ? {
-            partition: sync_lines,
+          parsePages(pdfData.Pages, sync_lines.length > 0 ? {
+            debug: sync_lines,
           } : {}), is_sponsor_assessment
         );
         resolve(data);
